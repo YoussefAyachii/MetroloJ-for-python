@@ -47,6 +47,7 @@ def GetNormIntensityProfile(path):
     plt.colorbar ( )
     plt.title("Normalized intensity profile")
 
+#ex
 GetNormIntensityMatrix(path5)
 GetNormIntensityProfile(path5)
 
@@ -66,6 +67,7 @@ def GetMicroscopyInfo(Microscope_type, Wavelength, NA, Sampling_rate, Pinhole):
     MicroscopyInfo=pd.DataFrame(MicroscopyInfo_dict)
     return MicroscopyInfo
 
+#ex
 GetMicroscopyInfo("example",1,2,3,4)
 
 #3. Report: Centers' locations IN PROGRESS
@@ -77,6 +79,12 @@ def GetPixelValuesOfLine(image_2d, x0, y0, xf, yf):
     rr, cc= np.array(draw.line(x0, y0, xf, yf))
     line_pixel_values=[image_2d[rr[i],cc[i]] for i in range(len(rr))]
     return line_pixel_values
+
+def GetXAxis(line):
+        nb_pixels=len(line)
+        x_axis=list(np.arange(round(-nb_pixels/2), round(nb_pixels/2+1), 1))
+        x_axis.remove(0) #the center of the matrix is 4 pixels not one 
+        return x_axis
 
 def GetIntensityPlot(image_2d):
     
@@ -90,12 +98,6 @@ def GetIntensityPlot(image_2d):
     diagUD=GetPixelValuesOfLine(image_2d, x0=0, y0=0, xf=xmax, yf=ymax) #diag UpDown Left Right
     diagDU=GetPixelValuesOfLine(image_2d, x0=xmax, y0=0, xf=0, yf=ymax) #diag DownUp Left Right
     
-    #x.axes
-    def GetXAxis(line):
-        nb_pixels=len(line)
-        x_axis=list(np.arange(round(-nb_pixels/2), round(nb_pixels/2+1), 1))
-        x_axis.remove(0) #the center of the matrix is 4 pixels not one 
-        return x_axis
     
     #plot
     plt.plot(GetXAxis(V_seg), V_seg, color = 'b',label = 'V_seg')
@@ -109,6 +111,7 @@ def GetIntensityPlot(image_2d):
     plt.xlim((min(GetXAxis(diagUD))-25,max(GetXAxis(diagUD))+25)) #25 subjective choice
     plt.legend()
 
+#ex
 GetIntensityPlot(GetImagesFromeMultiTiff(path5)[0]) #GetImagesFromeMultiTiff() from CV_report
 
 #5. Report: Profile statistics
@@ -198,7 +201,14 @@ def GetProfileStatisticsTable(path):
                                      
     ProfilesStatistics=pd.DataFrame(ProfilesStatistics_dict)
     return ProfilesStatistics
-    
+
+#ex
 GetProfileStatisticsTable(path5)
+
+"""
+#3. Report: Centers' locations IN PROGRESS
+"""
+GetNormIntensityMatrix(path5)
+
 
 
