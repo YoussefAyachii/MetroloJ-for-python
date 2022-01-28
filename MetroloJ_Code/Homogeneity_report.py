@@ -9,16 +9,11 @@ Created on Thu Jan 27 15:32:09 2022
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
-import matplotlib.image as mi
-import matplotlib
-import cv2
 
 #pip install aicsimageio
 #pip install 'Pillow==8.0.1' #aicsimageio need specific version of PIL
 from PIL import Image
-from aicsimageio import AICSImage, imread_dask
-from aicsimageio import readers
+from skimage import draw
 #pip install 'aicsimageio[base-imageio]'
 
 """
@@ -33,7 +28,6 @@ Code tested on .tif file from homogeneity samples
 
 Remarks: 
 - Centers' locations table (report): in progress
-- Get the diagonal intensity profile : not correct result if the image is not squared -> improve in progress
 """
 
 #1. Report: Normalized Intensity Report
@@ -79,71 +73,43 @@ GetMicroscopyInfo("example",1,2,3,4)
 
 #4. Report: Intensity Profiles 
 
-def GetDiagonalVecs(path):
-    #! Works but not correct result for non square images (when X!=Y) (another approach?)
-    img=np.asanyarray(Image.open(path))
-    
-    #Get First diagonal: UpDown
-    photo_diagUpDown=np.diagonal(img) #use numpy to get diag. (from left up to bottom right)
-    
-    #Get Second diagonal: DownUp
-    photo_diagDownUp=np.ones((1,len(photo_diagUpDown)))[0] #vec intialization
-    increase_index=list(range(len(photo_diagUpDown)))
-    decrease_index=increase_index
-    decrease_index.reverse() 
-    for i in range(len(photo_diagUpDown)):
-        #start from last row - first column toward first row - last column
-        x_temp=decrease_index[i] #from max-1 to 0
-        y_temp=increase_index[i] #from 0 to max-1
-        
-        pixel_temp=img[x_temp,y_temp]
-        photo_diagDownUp[i]=pixel_temp
-        
-        
-    diags=[photo_diagUpDown , photo_diagDownUp]
-    return diags
+def GetPixelValuesOfLine(image_2d, x0, y0, xf, yf):
+    rr, cc= np.array(draw.line(x0, y0, xf, yf))
+    line_pixel_values=[image_2d[rr[i],cc[i]] for i in range(len(rr))]
+    return line_pixel_values
 
-def GetVHsegments(path):
-    img=np.asanyarray(Image.open(path))
+def GetIntensityPlot(image_2d):
     
-    row_mid_index,col_mid_index=round(np.shape(img)[0]/2),round(np.shape(img)[1]/2)
-    photo_V=img[row_mid_index,:]
-    photo_H=img[:,col_mid_index]
+    xmax, ymax=np.shape(image_2d)
+    xmax=xmax-1 #-1 : python starts from 0
+    ymax=ymax-1
+    xmid=round(xmax/2) 
+    ymid=round(ymax/2)
+    V_seg=GetPixelValuesOfLine(image_2d, x0=0, y0=ymid, xf=xmax, yf=ymid)
+    H_seg=GetPixelValuesOfLine(image_2d, x0=xmid, y0=0, xf=xmid, yf=ymax)
+    diagUD=GetPixelValuesOfLine(image_2d, x0=0, y0=0, xf=xmax, yf=ymax) #diag UpDown Left Right
+    diagDU=GetPixelValuesOfLine(image_2d, x0=xmax, y0=0, xf=0, yf=ymax) #diag DownUp Left Right
     
-    VH_seg=[photo_V, photo_H]
-    return VH_seg
+    #x.axes
+    def GetXAxis(line):
+        nb_pixels=len(line)
+        x_axis=list(np.arange(round(-nb_pixels/2), round(nb_pixels/2+1), 1))
+        x_axis.remove(0) #the center of the matrix is 4 pixels not one 
+        return x_axis
+    
+    #plot
+    plt.plot(GetXAxis(V_seg), V_seg, color = 'b',label = 'V_seg')
+    plt.plot(GetXAxis(H_seg), H_seg, color = 'g',label = 'H_seg')
 
-def GetIntensityPlot(path):
-    
-    #Vertical and Horizontal mid lines data
-    V_seg=GetVHsegments(path)[0]
-    H_seg=GetVHsegments(path)[1]
-    #get the x axis for VH segs
-    nb_pixels_seg=len(V_seg)
-    x_axis_seg=list(np.arange(-nb_pixels_seg/2, nb_pixels_seg/2+1, 1))
-    x_axis_seg.remove(0) #the center of the matrix is 4 pixels not one 
-    
-    #Diagonals data
-    photo_diag1=GetDiagonalVecs(path)[0]
-    photo_diag2=GetDiagonalVecs(path)[1]
-    #get the x axis for VH segs
-    nb_pixels_diag=len(photo_diag1)
-    x_axis_diag=list(np.arange(-nb_pixels_diag/2, nb_pixels_diag/2+1, 1))
-    x_axis_diag.remove(0) # same
-    
-    #plots
-    plt.plot(x_axis_seg, V_seg, color = 'b',label = 'V_seg')
-    plt.plot(x_axis_seg, H_seg, color = 'g',label = 'H_seg')
-
-    plt.plot(x_axis_diag, photo_diag1, color='r', label= 'Diag1')
-    plt.plot(x_axis_diag, photo_diag2, color='y', label= 'Diag2')
+    plt.plot(GetXAxis(diagUD), diagUD, color='r', label= 'Diag1')
+    plt.plot(GetXAxis(diagDU), diagDU, color='y', label= 'Diag2')
 
     plt.axvline(0, linestyle='--')  
     plt.title("Intensity Profiles ")
+    plt.xlim((min(GetXAxis(diagUD))-25,max(GetXAxis(diagUD))+25)) #25 subjective choice
     plt.legend()
 
-
-GetIntensityPlot(path5)
+GetIntensityPlot(GetImagesFromeMultiTiff(path5)[0]) #GetImagesFromeMultiTiff() from CV_report
 
 #5. Report: Profile statistics
 
@@ -234,7 +200,5 @@ def GetProfileStatisticsTable(path):
     return ProfilesStatistics
     
 GetProfileStatisticsTable(path5)
-
-
 
 

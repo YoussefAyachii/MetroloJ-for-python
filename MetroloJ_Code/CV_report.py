@@ -9,9 +9,6 @@ Created on Wed Jan 26 14:23:09 2022
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
-import matplotlib.image as mi
-import matplotlib
 import cv2
 
 #pip install aicsimageio
@@ -32,6 +29,7 @@ path_dir="/Users/bottimacintosh/Desktop/test1.png"
 """
 CV Report 
 - In progress : Histograms 
+- GetImagesFromeMultiTiff() , to replace by 
 """
 
 #1. Import a stack of images containing the acquisitions made with the PMTs to analyze
@@ -49,7 +47,7 @@ def GetImagesFromeMultiTiff(path):
 path1="/Users/bottimacintosh/Documents/M2_CMB/IBDML/Data/CV/cv.comparatif.tif"
 tiff_images_data=GetImagesFromeMultiTiff(path1)
 
-#2. Get same ROI for each region
+#2. Get same ROI for each image in the same tiff
 
 def GetROI(image_data, x, y, h , w, origin="TL"):
     if origin=="TL": #top left
@@ -144,8 +142,8 @@ def GetCVforRGB(path): #Useful ?? Are we working on RGB images ?
         
         channels_temp=[R_channel,G_channel,B_channel]
         
-        mean_temp=[mean(i) for i in channels_temp]
-        std_temp=[std(i) for j in channels_temp]
+        mean_temp=[np.mean(i) for i in channels_temp]
+        std_temp=[np.std(j) for j in channels_temp]
         #add pixel column : np_pixels (see same function for BW images)
         
         CV_temp=[std_temp[h]/mean_temp[h] for h in range(len(channels_temp))]
