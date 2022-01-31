@@ -42,10 +42,13 @@ def GetNormIntensityMatrix(path): #used in both N.I.Profile and Centers' Locatio
 #Get normalized intensity profile (plot)
 def GetNormIntensityProfile(path):
     norm_intensity_profile=GetNormIntensityMatrix(path)
-
+    
+    fig=plt.figure()
     plt.imshow(norm_intensity_profile)
     plt.colorbar ( )
-    plt.title("Normalized intensity profile")
+    plt.title("Normalized intensity profile", figure=fig)
+    
+    return fig
 
 #ex
 GetNormIntensityMatrix(path5)
@@ -103,22 +106,22 @@ def GetIntensityPlot(path):
     
     
     #plot
-    plt.plot(GetXAxis(V_seg), V_seg, color = 'b',label = 'V_seg')
-    plt.plot(GetXAxis(H_seg), H_seg, color = 'g',label = 'H_seg')
+    fig = plt.figure()
+    plt.plot(GetXAxis(V_seg), V_seg, color = 'b',label = 'V_seg', figure=fig)
+    plt.plot(GetXAxis(H_seg), H_seg, color = 'g',label = 'H_seg', figure=fig)
 
-    plt.plot(GetXAxis(diagUD), diagUD, color='r', label= 'Diag1')
-    plt.plot(GetXAxis(diagDU), diagDU, color='y', label= 'Diag2')
+    plt.plot(GetXAxis(diagUD), diagUD, color='r', label= 'Diag1', figure=fig)
+    plt.plot(GetXAxis(diagDU), diagDU, color='y', label= 'Diag2', figure=fig)
 
     plt.axvline(0, linestyle='--')  
-    plt.title("Intensity Profiles ")
+    plt.title("Intensity Profiles", figure=fig)
     plt.xlim((min(GetXAxis(diagUD))-25,max(GetXAxis(diagUD))+25)) #25 subjective choice
     plt.legend()
+    
+    return fig
 
 #ex
-GetIntensityPlot(GetImagesFromeMultiTiff(path1)[0]) #GetImagesFromeMultiTiff() from CV_report
-GetIntensityPlot(path5) #GetImagesFromeMultiTiff() from CV_report
-
-GetIntensityPlot(np.array(Image.open(path5)))
+GetIntensityPlot(path5) 
 
 #5. Report: Profile statistics
 
@@ -238,8 +241,32 @@ def GetHomogeneityReportElements(path, Microscope_type, Wavelength, NA, Sampling
 
 #ex1
 Homogeneity_report_elements_1=GetHomogeneityReportElements(path5, "Confocal", 460, 1.4, "1.0x1.0x1.0", 1 ) 
+Homogeneity_report_elements_1[0]
+Homogeneity_report_elements_1[1]
+Homogeneity_report_elements_1[2]
+Homogeneity_report_elements_1[3]
+
+def SaveHomogeneityReportElements(tiff_path, output_dir, Microscope_type, Wavelength, NA, Sampling_rate, Pinhole):
+    HomogeneityReportElements = GetHomogeneityReportElements(tiff_path, Microscope_type, Wavelength, NA, Sampling_rate, Pinhole)
     
+    NormIntensityProfile = HomogeneityReportElements[0]
+    MicroscopyInfo = HomogeneityReportElements[1]
+    IntensityPlot = HomogeneityReportElements [2]
+    ProfileStatisticsTable = HomogeneityReportElements [3]
     
+    #.png : Normalized Intensity Profile and Intesity Profile plot
+    NormIntensityProfile.savefig(output_dir+"HistNbPixelVSGrayScale.png", format="png", bbox_inches='tight')
+    IntensityPlot.savefig(output_dir+"IntensityPlot.png", format="png", bbox_inches="tight")
+    
+    #.csv : Microscopy Info and ProfileStatisticsTable
+    MicroscopyInfo.to_csv(output_dir+"MicroscopyInfo.csv")
+    ProfileStatisticsTable.to_csv(output_dir+"ProfileStatisticsTable.csv")
+
+#ex1
+output_dir_hom="/Users/bottimacintosh/Documents/M2_CMB/IBDML/MetroloJ-for-python/Homogeneity_output_files/"
+SaveHomogeneityReportElements(path5, output_dir_hom, "Confocal", 460, 1.4, "1.0x1.0x1.0", 1 )
+
+
     
     
     

@@ -180,29 +180,23 @@ GetCV(path1)
 #4. Report : Get Tiff images with ROIs marked on them. 
 
 def GetOriginalWithMarkedROIs(path, x, y, h, w, origin="TL"):
-    #Additional args : output_dir, output_name, output_format="jpeg"
-    #Not useful if outputs on the same report 
     tiff_images_data=GetImagesFromeMultiTiff(path)
     mode_temp="RGB" if GetColorInfo(path)==1 else "L"
     
     if len(tiff_images_data)>1 :        
         image_list=[]
-        #output_path=output_dir+output_name
         for i in range(len(tiff_images_data)):
             
             image_temp_data=tiff_images_data[i]
             cv2.rectangle(image_temp_data, (x, y), (h, w), (255, 0, 0), 1)
             image_temp_toshow=Image.fromarray(image_temp_data, mode=mode_temp)
             image_list.append(image_temp_toshow)
-            #cv2.imwrite(output_path+str(i)+"."+output_format, image_temp_data)
  
     else:
-        #output_path=output_dir+output_name
         image_temp_data=tiff_images_data[0]
         cv2.rectangle(image_temp_data, (x, y), (h, w), (255, 0, 0), 1)
         image_temp_toshow=Image.fromarray(image_temp_data, mode=mode_temp)
         image_list=image_temp_toshow
-        #cv2.imwrite(output_path+"."+output_format, image_temp_data)
         
     
     return image_list
@@ -342,14 +336,14 @@ def GetCVReportElements (path, x, y, h, w, Microscope_type, Wavelength, NA, Samp
     return CVReportComponents
 
 #ex1
-report_elements_1=GetCVReportElements(path1, 100, 100, 300, 300, "Confocal", 460, 1.4, "1.0x1.0x1.0", 1)
-report_elements_1[0][0]
-report_elements_1[0][1]
-report_elements_1[1]
-report_elements_1[2]
-report_elements_1[3]
+CVreport_elements_1=GetCVReportElements(path1, 100, 100, 300, 300, "Confocal", 460, 1.4, "1.0x1.0x1.0", 1)
+CVreport_elements_1[0][0]
+CVreport_elements_1[0][1]
+CVreport_elements_1[1]
+CVreport_elements_1[2]
+CVreport_elements_1[3]
 
-def SaveCVElements(tiff_path, output_dir, x, y, h, w, Microscope_type, Wavelength, NA, Sampling_rate, Pinhole):
+def SaveCVReportElements(tiff_path, output_dir, x, y, h, w, Microscope_type, Wavelength, NA, Sampling_rate, Pinhole):
     CVReportElements=GetCVReportElements(tiff_path, x, y, h, w, Microscope_type, Wavelength, NA, Sampling_rate, Pinhole)
     
     OriginalWithMarkedROIs=CVReportElements[0]
@@ -368,21 +362,14 @@ def SaveCVElements(tiff_path, output_dir, x, y, h, w, Microscope_type, Wavelengt
         output_path=output_dir            
         OriginalWithMarkedROIs[i].save(fp=output_path, format="PNG")
     
-    #.csv : MicroscopyInfo and CV dataframes
-    #np.savetxt(output_dir+"MicroscopyInfo_df.csv", MicroscopyInfo, delimiter=",")
-    #np.savetxt(output_dir+"CV_df.csv", CV_df, delimiter=",")
     CV_df.to_csv(output_dir+"CV.csv")
     MicroscopyInfo.to_csv(output_dir+"MicroscopyInfo.csv")
-
     
-    #.png : HistNbPixelVSGrayScale
-    HistNbPixelVSGrayScale.savefig(output_dir+"HistNbPixelVSGrayScale.png", format="png", bbox_inches='tight')
-    #.save(fp=output_path+"HistNbPixelVSGrayScale", format="PNG")
-    
+    HistNbPixelVSGrayScale.savefig(output_dir+"HistNbPixelVSGrayScale.png", format="png", bbox_inches='tight') 
     
 #ex1
 output_path_dir="/Users/bottimacintosh/Documents/M2_CMB/IBDML/MetroloJ-for-python/CV_output_files/"
-SaveCVElements(path1, output_path_dir, 100, 100, 300, 300, "Confocal", 460, 1.4, "1.0x1.0x1.0", 1 )    
+SaveCVReportElements(path1, output_path_dir, 100, 100, 300, 300, "Confocal", 460, 1.4, "1.0x1.0x1.0", 1 )    
     
 
     
