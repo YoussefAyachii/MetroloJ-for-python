@@ -88,7 +88,7 @@ def GetColorInfo(path):
 GetColorInfo(path0)
 GetColorInfo(path1)
 
-def GetCVforBW(path, sample_names="NA"):
+def GetCVforBW(path):
     tiff_images_data=GetImagesFromeMultiTiff(path)
     
     avg_vec=[]
@@ -121,7 +121,7 @@ def GetCVforBW(path, sample_names="NA"):
            "CVs relative to min value":CV_vec_normalized
            }
      
-    CV_df=pd.DataFrame(CV_df) if sample_names=="NA" else pd.DataFrame(CV_df, sample_names)
+    CV_df=pd.DataFrame(CV_df) 
     
     return CV_df 
 
@@ -159,12 +159,17 @@ def GetCVforRGB(path): #Useful ?? Are we working on RGB images ?
     
     return CV_df
         
-def GetCV(path):
+def GetCV(path, sample_names="NA"):
     color=GetColorInfo(path)
     if color==0 : #B&W
         CV=GetCVforBW(path)
     else:
         CV=GetCVforRGB(path)
+    
+    #If desired, add names for each image of the Tiff
+    if sample_names!="NA" :
+        CV.index=sample_names
+        
     return CV
 
 #ex1
@@ -174,43 +179,42 @@ GetCV(path1)
 
 #4. Report : Get Tiff images with ROIs marked on them. 
 
-def GetOriginalWithMarkedROIs(path, x, y, h, w, mode, output_dir, output_name, output_format="jpeg" ,origin="TL"):
+def GetOriginalWithMarkedROIs(path, x, y, h, w, origin="TL"):
+    #Additional args : output_dir, output_name, output_format="jpeg"
+    #Not useful if outputs on the same report 
     tiff_images_data=GetImagesFromeMultiTiff(path)
+    mode_temp="RGB" if GetColorInfo(path)==1 else "L"
     
-    if len(tiff_images_data)>1 :
+    if len(tiff_images_data)>1 :        
         image_list=[]
-        output_path=output_dir+output_name
+        #output_path=output_dir+output_name
         for i in range(len(tiff_images_data)):
+            
             image_temp_data=tiff_images_data[i]
             cv2.rectangle(image_temp_data, (x, y), (h, w), (255, 0, 0), 1)
-            image_temp_toshow=Image.fromarray(image_temp_data, mode=mode)
+            image_temp_toshow=Image.fromarray(image_temp_data, mode=mode_temp)
             image_list.append(image_temp_toshow)
-            cv2.imwrite(output_path+str(i)+"."+output_format, image_temp_data)
+            #cv2.imwrite(output_path+str(i)+"."+output_format, image_temp_data)
  
     else:
-        output_path=output_dir+output_name
+        #output_path=output_dir+output_name
         image_temp_data=tiff_images_data[0]
         cv2.rectangle(image_temp_data, (x, y), (h, w), (255, 0, 0), 1)
-        image_temp_toshow=Image.fromarray(image_temp_data, mode=mode)
+        image_temp_toshow=Image.fromarray(image_temp_data, mode=mode_temp)
         image_list=image_temp_toshow
-        cv2.imwrite(output_path+"."+output_format, image_temp_data)
+        #cv2.imwrite(output_path+"."+output_format, image_temp_data)
         
     
     return image_list
 
 #ex1    
-image1_with_roi=GetOriginalWithMarkedROIs(path1, 100, 100, 100+300, 100+200,mode="L", #mode="RGB" if colored img
-                                    output_dir="/Users/bottimacintosh/Desktop/",
-                                    output_name="tests",
-                                    output_format="png")
+image1_with_roi=GetOriginalWithMarkedROIs(path1, 100, 100, 100+300, 100+200) #mode="RGB" if colored img
+                                    
 image1_with_roi[0]
 image1_with_roi[1]
 
 #ex2
-GetOriginalWithMarkedROIs(path0, 0, 0, 100+300, 100+200,mode="L", 
-                                    output_dir="/Users/bottimacintosh/Desktop/",
-                                    output_name="tests",
-                                    output_format="png")
+GetOriginalWithMarkedROIs(path0, 0, 0, 100+300, 100+200)
 
 
 #5. Report : Microscopie info 
@@ -237,27 +241,148 @@ GetMicroscopyInfo("Confocal",460.0,1.4,"1.0x1.0x1.0", 1.0)
 #6. Report: Get Histogram : nb of pixels per intensity values
 # In Progress
 
-def GetHistNbPixelVSGrayScale(image_2d):
+def GetHistNbPixelVSGrayScale(path, x=0, y=0, h=0, w=0):
+    tiff_images_data=GetImagesFromeMultiTiff(path)
     
-    image_flat=list(image_2d.flatten()) #convert matrix to one vector
-    count_df=pd.DataFrame.from_dict(Counter(image_flat), orient='index').reset_index()
-    count_df=count_df.rename(columns={'index':'intensity', 0:'count'})
-    count_df=count_df.sort_values(by="intensity", axis=0, ascending=True)
+    #if x,y,h and w == 0 : GetHist on the whole image. 
+    #if  x,y,h and w specified : GetHist of specidfied ROI
+    if x==0 and y==0 : 
+        tiff_images_data=GetImagesFromeMultiTiff(path)
+    else :
+        tiff_images_data=GetImagesFromeMultiTiff(path)
+        for i in range(len(tiff_images_data)):
+            tiff_images_data[i]=tiff_images_data[i][x:(x+h),y:(y+h)]
+        
+    #build histograms for each image of the tiff   
+    if len(tiff_images_data)>1 :
+        count_df_list=[]
+        fig = plt.figure()
+        for i in range(len(tiff_images_data)):
+            image_2d_temp=tiff_images_data[i]
+    
+            image_flat_temp=list(image_2d_temp.flatten()) #convert matrix to one vector
+            count_df_temp=pd.DataFrame.from_dict(Counter(image_flat_temp), orient='index').reset_index()
+            count_df_temp=count_df_temp.rename(columns={'index':'intensity', 0:'count'})
+            count_df_temp=count_df_temp.sort_values(by="intensity", axis=0, ascending=True)
+            count_df_list.append(count_df_temp)
+            
+        colours=['r','g','b','k']
+        for j in range(len(tiff_images_data)) :
+            plt.plot(count_df_list[j]['intensity'], count_df_list[j]["count"] ,marker=".", markersize=0.2,  color=colours[j], label= 'ROI pixels '+str(j), linewidth=0.8,  figure=fig)
+            
 
-    plt.plot(count_df['intensity'], count_df["count"] ,marker=".", markersize=0.2,  color='b', label= 'ROI pixels', linewidth=0.8)
-    
-    plt.title("Intensity histogram")
-    plt.xlim((0,256)) #25 subjective choice
+    else : 
+        fig = plt.figure()
+        image_2d=tiff_images_data[0]
+        image_flat=list(image_2d.flatten()) #convert matrix to one vector
+        count_df=pd.DataFrame.from_dict(Counter(image_flat), orient='index').reset_index()
+        count_df=count_df.rename(columns={'index':'intensity', 0:'count'})
+        count_df=count_df.sort_values(by="intensity", axis=0, ascending=True)
+        plt.plot(count_df['intensity'], count_df["count"] ,marker=".", markersize=0.2,  color="b", label= 'ROI pixels', linewidth=0.8,  figure=fig)
+
+
+    plt.title("Intensity histogram", figure=fig)
+    plt.xlim((0,256)) 
     plt.xlabel("Gray levels")
     plt.ylabel("Nb Pixels")
     plt.legend()
+    plt.title("Intensity histogram", figure=fig)
+    plt.show() #to pythn verification
+
+    return fig
 
 #ex1
-img1=GetImagesFromeMultiTiff(path1)[0]
-GetHistNbPixelVSGrayScale(img1)
+GetHistNbPixelVSGrayScale(path1, 100,100,200,200)
 #ex2
-ex=np.random.randint(255, size=(100, 100, 10), dtype=np.uint8)
-GetHistNbPixelVSGrayScale(ex)
-#ex3
-image0=GetImagesFromeMultiTiff(path1)[0]
-GetHistNbPixelVSGrayScale(image0)
+GetHistNbPixelVSGrayScale(path1)
+
+
+"""
+REPORT
+"""
+
+def GetCVReportElements (path, x, y, h, w, Microscope_type, Wavelength, NA, Sampling_rate, Pinhole):
+    #Get image from path; 2d image from path; 
+    ImagesFromeMultiTiff=GetImagesFromeMultiTiff(path)
+    
+    if len(ImagesFromeMultiTiff)>1 :
+        OriginalWithMarkedROIs_list=[]
+        
+        for i in range(len(ImagesFromeMultiTiff)):
+            #Get Images with Marked ROIs on them
+            OriginalWithMarkedROIs_temp=GetOriginalWithMarkedROIs(path, x, y, h, w, origin="TL")[i]
+            OriginalWithMarkedROIs_list.append(OriginalWithMarkedROIs_temp)
+        
+        #CV
+        CV=GetCV(path)
+            
+        #Microscope info dataframe 
+        MicroscopyInfo=GetMicroscopyInfo(Microscope_type, Wavelength, NA, Sampling_rate, Pinhole)
+        
+        #Histogram : Nbpixel VS Gray scale
+        HistNbPixelVSGrayScale=GetHistNbPixelVSGrayScale(path)
+        
+        #Output for report
+        CVReportComponents=[OriginalWithMarkedROIs_list, MicroscopyInfo, HistNbPixelVSGrayScale, CV]
+        
+    else :
+        #Get Images with Marked ROIs on them
+        OriginalWithMarkedROIs=GetOriginalWithMarkedROIs(path, x, y, h, w, origin="TL")
+        
+        #Get Microscope info dataframe 
+        MicroscopyInfo=GetMicroscopyInfo(Microscope_type, Wavelength, NA, Sampling_rate, Pinhole)
+        
+        #Get Histogram : Nbpixel VS Gray scale
+        HistNbPixelVSGrayScale=GetHistNbPixelVSGrayScale(path)
+        
+        #Get CV table
+        CV=GetCV(path)
+        CVReportComponents=[OriginalWithMarkedROIs,MicroscopyInfo ,  HistNbPixelVSGrayScale, CV]
+    
+    return CVReportComponents
+
+#ex1
+report_elements_1=GetCVReportElements(path1, 100, 100, 300, 300, "Confocal", 460, 1.4, "1.0x1.0x1.0", 1)
+report_elements_1[0][0]
+report_elements_1[0][1]
+report_elements_1[1]
+report_elements_1[2]
+report_elements_1[3]
+
+def SaveCVElements(tiff_path, output_dir, x, y, h, w, Microscope_type, Wavelength, NA, Sampling_rate, Pinhole):
+    CVReportElements=GetCVReportElements(tiff_path, x, y, h, w, Microscope_type, Wavelength, NA, Sampling_rate, Pinhole)
+    
+    OriginalWithMarkedROIs=CVReportElements[0]
+    MicroscopyInfo=CVReportElements[1]
+    HistNbPixelVSGrayScale=CVReportElements[2]
+    CV_df=CVReportElements[3]
+    
+    
+    
+    #.png : Images with marked ROIs
+    if len(OriginalWithMarkedROIs)>1 : 
+        for i in range(len(OriginalWithMarkedROIs)):
+            output_path_temp=output_dir+"Image_"+str(i)            
+            OriginalWithMarkedROIs[i].save(fp=output_path_temp, format="PNG")
+    else:
+        output_path=output_dir            
+        OriginalWithMarkedROIs[i].save(fp=output_path, format="PNG")
+    
+    #.csv : MicroscopyInfo and CV dataframes
+    #np.savetxt(output_dir+"MicroscopyInfo_df.csv", MicroscopyInfo, delimiter=",")
+    #np.savetxt(output_dir+"CV_df.csv", CV_df, delimiter=",")
+    CV_df.to_csv(output_dir+"CV.csv")
+    MicroscopyInfo.to_csv(output_dir+"MicroscopyInfo.csv")
+
+    
+    #.png : HistNbPixelVSGrayScale
+    HistNbPixelVSGrayScale.savefig(output_dir+"HistNbPixelVSGrayScale.png", format="png", bbox_inches='tight')
+    #.save(fp=output_path+"HistNbPixelVSGrayScale", format="PNG")
+    
+    
+#ex1
+output_path_dir="/Users/bottimacintosh/Documents/M2_CMB/IBDML/MetroloJ-for-python/CV_output_files/"
+SaveCVElements(path1, output_path_dir, 100, 100, 300, 300, "Confocal", 460, 1.4, "1.0x1.0x1.0", 1 )    
+    
+
+    

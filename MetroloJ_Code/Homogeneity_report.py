@@ -75,7 +75,8 @@ GetMicroscopyInfo("example",1,2,3,4)
 
 #4. Report: Intensity Profiles 
 
-def GetPixelValuesOfLine(image_2d, x0, y0, xf, yf):
+def GetPixelValuesOfLine(path, x0, y0, xf, yf):
+    image_2d=np.array(Image.open(path))
     rr, cc= np.array(draw.line(x0, y0, xf, yf))
     line_pixel_values=[image_2d[rr[i],cc[i]] for i in range(len(rr))]
     return line_pixel_values
@@ -85,18 +86,20 @@ def GetXAxis(line):
         x_axis=list(np.arange(round(-nb_pixels/2), round(nb_pixels/2+1), 1))
         x_axis.remove(0) #the center of the matrix is 4 pixels not one 
         return x_axis
-
-def GetIntensityPlot(image_2d):
     
+
+def GetIntensityPlot(path):
+    image_2d=np.array(Image.open(path))
+
     xmax, ymax=np.shape(image_2d)
     xmax=xmax-1 #-1 : python starts from 0
     ymax=ymax-1
     xmid=round(xmax/2) 
     ymid=round(ymax/2)
-    V_seg=GetPixelValuesOfLine(image_2d, x0=0, y0=ymid, xf=xmax, yf=ymid)
-    H_seg=GetPixelValuesOfLine(image_2d, x0=xmid, y0=0, xf=xmid, yf=ymax)
-    diagUD=GetPixelValuesOfLine(image_2d, x0=0, y0=0, xf=xmax, yf=ymax) #diag UpDown Left Right
-    diagDU=GetPixelValuesOfLine(image_2d, x0=xmax, y0=0, xf=0, yf=ymax) #diag DownUp Left Right
+    V_seg=GetPixelValuesOfLine(path, x0=0, y0=ymid, xf=xmax, yf=ymid)
+    H_seg=GetPixelValuesOfLine(path, x0=xmid, y0=0, xf=xmid, yf=ymax)
+    diagUD=GetPixelValuesOfLine(path, x0=0, y0=0, xf=xmax, yf=ymax) #diag UpDown Left Right
+    diagDU=GetPixelValuesOfLine(path, x0=xmax, y0=0, xf=0, yf=ymax) #diag DownUp Left Right
     
     
     #plot
@@ -112,7 +115,10 @@ def GetIntensityPlot(image_2d):
     plt.legend()
 
 #ex
-GetIntensityPlot(GetImagesFromeMultiTiff(path5)[0]) #GetImagesFromeMultiTiff() from CV_report
+GetIntensityPlot(GetImagesFromeMultiTiff(path1)[0]) #GetImagesFromeMultiTiff() from CV_report
+GetIntensityPlot(path5) #GetImagesFromeMultiTiff() from CV_report
+
+GetIntensityPlot(np.array(Image.open(path5)))
 
 #5. Report: Profile statistics
 
@@ -206,9 +212,64 @@ def GetProfileStatisticsTable(path):
 GetProfileStatisticsTable(path5)
 
 """
-#3. Report: Centers' locations IN PROGRESS
+#REPORT 
 """
-GetNormIntensityMatrix(path5)
 
+def GetHomogeneityReportElements(path, Microscope_type, Wavelength, NA, Sampling_rate, Pinhole):
+    
+    #1. Get Normalized Intensity Profile 
+    NormIntensityProfile=GetNormIntensityProfile(path)
+    
+    #2. Get Microscopy Info
+    MicroscopyInfo=GetMicroscopyInfo(Microscope_type, Wavelength, NA, Sampling_rate, Pinhole)
+    
+    #3. Get Centers' locations
+    
+    #4. Get Intensity Profiles
+    IntensityPlot=GetIntensityPlot(path) #2nd fct from CV file
+    
+    #5. Get Profiles Statistics
+    ProfileStatisticsTable=GetProfileStatisticsTable(path)
+    
+    HomogeneityReportComponents=[NormIntensityProfile, MicroscopyInfo, IntensityPlot, ProfileStatisticsTable]
+    
+    return HomogeneityReportComponents
+    
 
-
+#ex1
+Homogeneity_report_elements_1=GetHomogeneityReportElements(path5, "Confocal", 460, 1.4, "1.0x1.0x1.0", 1 ) 
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
