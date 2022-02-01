@@ -1,0 +1,6 @@
+numpy
+pandas
+matplotlib
+aicsimageio
+Pillow==8.0.1
+aicsimageio[base-imageio]
