@@ -357,10 +357,10 @@ def SaveCVReportElements(tiff_path, output_dir, x, y, h, w, Microscope_type, Wav
     if len(OriginalWithMarkedROIs)>1 : 
         for i in range(len(OriginalWithMarkedROIs)):
             output_path_temp=output_dir+"Image_"+str(i)            
-            OriginalWithMarkedROIs[i].save(fp=output_path_temp, format="PNG")
+            OriginalWithMarkedROIs[i].save(fp=output_path_temp+".png", format="PNG")
     else:
         output_path=output_dir            
-        OriginalWithMarkedROIs[i].save(fp=output_path, format="PNG")
+        OriginalWithMarkedROIs[i].save(fp=output_path+".png", format="PNG")
     
     CV_df.to_csv(output_dir+"CV.csv")
     MicroscopyInfo.to_csv(output_dir+"MicroscopyInfo.csv")
