@@ -371,5 +371,111 @@ def SaveCVReportElements(tiff_path, output_dir, x, y, h, w, Microscope_type, Wav
 output_path_dir="/Users/bottimacintosh/Documents/M2_CMB/IBDML/MetroloJ-for-python/CV_output_files/"
 SaveCVReportElements(path1, output_path_dir, 100, 100, 300, 300, "Confocal", 460, 1.4, "1.0x1.0x1.0", 1 )    
     
+"""
+Get default ROI : seg seuillage 
+"""
+img_2d=GetImagesFromeMultiTiff(path1)[0]
+Image.fromarray(img_2d)
+img=img_2d
+
+#1. segmentation : threshold to detect billes
+#Thresholding is used to create a binary image from a grayscale image
+from skimage.filters import threshold_otsu
+import math
+thresh=threshold_otsu(img)
+binary = img > thresh
+
+#2. ROI default : central 20% of the image 
+def GetROIDefault(img):
+    x,y = img.shape
+    
+    perc=20 #We want to get the central 20% of the input image
+    q=math.sqrt(perc/100)    
+    
+    output_height_size=int((q*100)*x//100)
+    output_width_size=int((q*100)*y//100)
+    
+    startx = x//2-(output_height_size//2)
+    starty = y//2-(output_width_size//2) 
+    
+    ROI_data=img[startx:startx+output_height_size, starty:starty+output_width_size]
+    
+    ROI_start_pixel=[startx,starty]
+    ROI_end_pixel=[startx+output_height_size,starty+output_width_size]
+    
+    xtot,ytot=np.shape(ROI_data)
+    ROI_nb_pixels=[xtot, ytot]
+    
+    #2 outputs :
+        #1. dict : ROI infos
+    ROI_info={}
+    ROI_info["Original_image_dim"]=np.shape(img)
+    ROI_info["ROI_nb_pixels"]=ROI_nb_pixels
+    ROI_info["ROI_start_pixel"]=ROI_start_pixel
+    ROI_info["ROI_end_pixel"]=ROI_end_pixel
+    ROI_info=pd.DataFrame(ROI_info)
+        
+        #2. image : ROI and ROI numpy matrix 
+    ROI_Pil=Image.fromarray(ROI_data)   
+    
+    return [ROI_info, ROI_Pil, ROI_data]
+
+#ex
+GetROIDefault(img)[0]["ROI_start_pixel"][0]
+GetROIDefault(img)[1]
+GetROIDefault(img)[2]
+
+
+#Udated function : 
+def GetOriginalWithMarkedROIsDefault(img):
+    
+    ROI_info=GetROIDefault(img)[0]
+    x0,y0=ROI_info["ROI_start_pixel"][0], ROI_info["ROI_start_pixel"][1]
+    h,w=x0+ROI_info["ROI_nb_pixels"][0], y0+ROI_info["ROI_nb_pixels"][1]
+    
+    cv2.rectangle(img, (x0, y0), (h, w), (255, 0, 0), 1)
+    img_with_ROI=Image.fromarray(img, mode="L") #2D images: no need for mode="RGB" option 
+    image_list=img_with_ROI
+
+    return image_list    
+
+#ex
+GetOriginalWithMarkedROIsDefault(img)
+
+
+#ex complete execution 
+
+image=GetImagesFromeMultiTiff(path1)[0]
+image=np.array(GetOriginalWithMarkedROIsDefault(img))
+
+
+thresh = threshold_otsu(image)
+binary = image > thresh
+
+fig, axes = plt.subplots(ncols=3, figsize=(8, 2.5))
+ax = axes.ravel()
+ax[0] = plt.subplot(1, 3, 1)
+ax[1] = plt.subplot(1, 3, 2)
+ax[2] = plt.subplot(1, 3, 3, sharex=ax[0], sharey=ax[0])
+
+ax[0].imshow(image, cmap=plt.cm.gray)
+ax[0].set_title('Original')
+ax[0].axis('off')
+
+ax[1].hist(image.ravel(), bins=256)
+ax[1].set_title('Histogram')
+ax[1].axvline(thresh, color='r')
+
+ax[2].imshow(binary, cmap=plt.cm.gray)
+ax[2].set_title('Thresholded')
+ax[2].axis('off')
+
+plt.show()
+
+
+
+
+
+
 
     
