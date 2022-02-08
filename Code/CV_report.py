@@ -3,47 +3,30 @@
 """
 Created on Wed Jan 26 14:23:09 2022
 
-@author: bottimacintosh
+@author:YoussefAyachi
 """
 
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-
-import matplotlib.patches as mpatches
-
-from skimage import data
 from skimage.filters import threshold_otsu
 from skimage.segmentation import clear_border
-from skimage.measure import label, regionprops
 from skimage.morphology import closing, square
-
-# pip install aicsimageio
-# pip install 'Pillow==8.0.1' #aicsimageio need specific version of PIL
 from PIL import Image
-from aicsimageio import AICSImage, imread_dask
-from aicsimageio import TiffGlobReader
-from aicsimageio import readers
-#pip install 'aicsimageio[base-imageio]'
-from collections import Counter
-
-from skimage.filters import threshold_otsu
-import math
-
 import cv2
 
 """
 Paths for execution
 """
-path0="/Users/bottimacintosh/Downloads/pup3.tif"
-path11="/Users/Youssef/Documents/IBDML/Data/homogeneity/lame/homogeneite10zoom1-488.tif"
-path1="/Users/Youssef/Documents/IBDML/Data/CV/cv.comparatif.tif"
-pathCV="/Users/bottimacintosh/Documents/M2_CMB/IBDML/Data/CV/cv.comparatif.tif"
-path_dir="/Users/bottimacintosh/Desktop/test1.png"
+
+
+path11 = "/Users/Youssef/Documents/IBDML/Data/homogeneity/lame/homogeneite10zoom1-488.tif"
+path1 = "/Users/Youssef/Documents/IBDML/Data/CV/cv.comparatif.tif"
+
 
 """
 CV report:
-- Get sample names and add them to the images with roi: in progress. 
+- Get sample names and add them to the images with roi: in progress.
 """
 
 # 1. Import .tiff containing the acquisitions made with the PMTs to analyze
@@ -101,6 +84,7 @@ def get_roi_default(tiff_data):
 
     ROI_info = {}
     ROI_img = []
+    ROI_data = []
     ROI_nb_pixels_list = []
     ROI_start_pixel_list = []
     ROI_end_pixel_list = []
@@ -114,31 +98,29 @@ def get_roi_default(tiff_data):
         startx, endx = int(x//2 - h//2), int(x//2 + h//2)
         starty, endy = int(y//2 - w//2), int(y//2 + w//2)
 
-        ROI_data = tiff_data[i][startx:endx, starty:endy]
+        ROI_data_temp = tiff_data[i][startx:endx, starty:endy]
         ROI_start_pixel = [startx, starty]
         ROI_end_pixel = [endx, endy]
 
-        ROI_nb_pixels = ROI_data.shape
+        ROI_nb_pixels = ROI_data_temp.shape
 
         ROI_nb_pixels_list.append(ROI_nb_pixels)
         ROI_start_pixel_list.append(ROI_start_pixel)
         ROI_end_pixel_list.append(ROI_end_pixel)
         ROI_Original_ratio_list.append("20%")
 
-        ROI_img.append(Image.fromarray(ROI_data))
+        ROI_img.append(Image.fromarray(ROI_data_temp))
 
-    # 3 outputs :
+        ROI_data.append(ROI_data_temp)
 
-    # 1. dict enclosing info about the ROI
+    # dict enclosing info about the ROI
     ROI_info["ROI_nb_pixels"] = ROI_nb_pixels_list
     ROI_info["ROI_start_pixel"] = ROI_start_pixel_list
     ROI_info["ROI_end_pixel"] = ROI_end_pixel_list
     ROI_info["ROI_Original_ratio"] = ROI_Original_ratio_list
     ROI_info = pd.DataFrame(ROI_info)
 
-    # 2. ROI images: ROI_img
-
-    return [ROI_info, ROI_img]
+    return [ROI_info, ROI_img, ROI_data]
 
 
 # ex1: one image in tiff file
@@ -151,11 +133,14 @@ img = get_images_from_multi_tiff(path1)
 get_roi_default(img)[0]  # df
 get_roi_default(img)[1][0]
 get_roi_default(img)[1][1]  # image
+get_roi_default(img)[1][1]  # image
+get_roi_default(img)[2][0]  # matrix 1
+get_roi_default(img)[2][0]  # matrix 2
 
 # 3. Compute CV
 
 
-def get_segmented_image(img):
+def get_segmented_image(imge):
     """
     Given a 2D np.array, it replaces all the pixels with an intensity below
     a threshold by 0 as well as artifacts connected to image border.
@@ -173,17 +158,17 @@ def get_segmented_image(img):
 
     """
     # apply threshold
-    thresh = threshold_otsu(img)
-    bw = closing(img > thresh, square(3))
+    thresh = threshold_otsu(imge)
+    bw = closing(imge > thresh, square(3))
 
     # remove artifacts connected to image border
     cleared = clear_border(bw)
-    xtot, ytot = np.shape(img)
+    xtot, ytot = np.shape(imge)
     for i in range(xtot):
         for j in range(ytot):
-            if cleared[i, j] is False:
-                img[i, j] = 0
-    return img
+            if not cleared[i, j]:
+                imge[i, j] = 0
+    return imge
 
 
 # ex:
@@ -410,32 +395,23 @@ def get_hist_data(img):
 
     """
 
-    roi_data = [img]
-    roi_info = get_roi_default(roi_data)[0]
-
-    x0, y0 = roi_info["ROI_start_pixel"][0]
-    xf, yf = roi_info["ROI_end_pixel"][0]
-
     # convert matrix to one vector
-    img_seg = get_segmented_image(roi_data[0])
-    ball_intensity_vec = np.ndarray.tolist(
-        get_non_zero_vec_from_seg_image(img_seg)
-        )
-    ball_intensity_vec.sort()
+    ball_intensity_vec = get_segmented_image(img)
+    ball_intensity_vec.flatten()
+    ball_intensity_vec = ball_intensity_vec[ball_intensity_vec != 0]
+    np.ndarray.sort(ball_intensity_vec)
 
     # build a dataframe
-    count_list = [ball_intensity_vec.count(i) for i in ball_intensity_vec]  # to optimize
-    # counter_dict = Counter(ball_intensity_vec)
-    # grey_intensity = counter_dict.keys()
-    # nb_pixels = counter_dict.values()
-    hist_data = np.array([[ball_intensity_vec, count_list]])
+    intensity_value, nb_pixel = np.unique(ball_intensity_vec,
+                                          return_counts=True)
+    hist_data = np.array([[intensity_value, nb_pixel]])
 
     return hist_data
 
 
 # ex:
-img = get_images_from_multi_tiff(path1)[0]
-get_hist_data(img)
+img = get_roi_default(get_images_from_multi_tiff(path1))[2]
+get_hist_data(img[0])
 
 
 def get_hist_nbpixel_vs_grayintensity(tiff_data):
@@ -457,8 +433,9 @@ def get_hist_nbpixel_vs_grayintensity(tiff_data):
     fig = plt.figure()
     colors = ["r", "g", "b", "c", "m", "y", "k", "w"]
 
-    for i in range(len(tiff_data)):
-        hist_data = get_hist_data(tiff_data[i])
+    roi_list = get_roi_default(tiff_data)[2]
+    for i in range(len(roi_list)):
+        hist_data = get_hist_data(roi_list[i])
         plt.plot(hist_data[0][0], hist_data[0][1],
                  marker=".", markersize=0.2,  color=colors[i],
                  label="ROI " + str(i), linewidth=0.8, figure=fig)
