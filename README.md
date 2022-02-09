@@ -3,4 +3,4 @@ MetroloJ is an Image-J plugin that helps keeping track of microscopes' performan
 The present projects aims to implement MetroloJ functionalities on python. 
 
 #### References
-[1]https://imagejdocu.tudor.lu/plugin/analysis/metroloj/start
+[1] https://imagejdocu.tudor.lu/plugin/analysis/metroloj/start
