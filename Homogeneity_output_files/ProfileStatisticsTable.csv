@@ -1,10 +1,10 @@
-,Location,Intensity,Intensity Relative to Max
-0,"Maximum found at [219, 305]",150,1.0
-1,Top-Left corner,109,0.7266666889190674
-2,Top-Right corner,123,0.8199999928474426
-3,Bottom-Left corner,116,0.7733333110809326
-4,Bottom-Right corner,115,0.7666666507720947
-5,Upper-Middle pixel,133,0.8866666555404663
-6,Bottom-Middle pixel,129,0.8600000143051147
-7,Left-Middle pixel,124,0.8266666531562805
-8,Right-Middle pixel,135,0.8999999761581421
+,location,intensity,intensity relative to max
+0,top-left corner,109,0.7266666666666667
+1,upper-middle pixel,124,0.8266666666666667
+2,top-right corner,116,0.7733333333333333
+3,left-middle pixel,133,0.8866666666666667
+4,"maximum found at [219, 305]",150,1.0
+5,right-middle pixel,129,0.86
+6,bottom-left corner,123,0.82
+7,bottom-middle pixel,135,0.9
+8,bottom-right corner,115,0.7666666666666667

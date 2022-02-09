@@ -1,6 +1,6 @@
 ,Labels,Values
-0,Microscope type ,Confocal
-1,Wavelength (nm),460
-2,NA ,1.4
-3,Sampling rate pixel,1.0x1.0x1.0
+0,Microscope type ,confocal
+1,Wavelength (nm),458
+2,NA ,1
+3,Sampling rate pixel,1x1x1
 4,Pinhole (airy units),1

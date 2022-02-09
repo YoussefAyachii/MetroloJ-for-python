@@ -9,63 +9,28 @@ Created on Wed Jan 26 14:23:09 2022
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+
 from skimage.filters import threshold_otsu
 from skimage.segmentation import clear_border
 from skimage.morphology import closing, square
+from skimage.draw import polygon_perimeter
+
 from PIL import Image
-import cv2
 
-"""
-Paths for execution
-"""
-
-
-path11 = "/Users/Youssef/Documents/IBDML/Data/homogeneity/lame/homogeneite10zoom1-488.tif"
-path1 = "/Users/Youssef/Documents/IBDML/Data/CV/cv.comparatif.tif"
-
+import common_module as cm
 
 """
 CV report:
-- Get sample names and add them to the images with roi: in progress.
+Code tested on one or multi image .tif file (from homogeneity and cv samples)
 """
 
-# 1. Import .tiff containing the acquisitions made with the PMTs to analyze
-# Use paths as inputs
 
-
-def get_images_from_multi_tiff(path):
-    """
-    Import .tif file from a given path
-
-    Parameters
-    ----------
-    path : str
-        .tif file path.
-
-    Returns
-    -------
-    tiff_images : list
-        retrns list of np.arrays enclosed in the .tif file.
-
-    """
-    img = Image.open(path)
-    tiff_images = []
-    for i in range(img.n_frames):
-        img.seek(i)
-        tiff_images.append(np.array(img))
-    return tiff_images
-
-
-# ex
-get_images_from_multi_tiff(path1)[0]
-
-
-# 2. Get ROI (default central 20% of the original image) for a given 2d image
+# Get ROI (default central 20% of the original image) for a given 2d image
 
 
 def get_roi_default(tiff_data):
     """
-    Select the Region Of Interest (ROI) from the initial image,
+    Select the default Region Of Interest (ROI) from the initial image,
     e.i. select the central 20% of the whole np.array and return it.
     The returned arrays, one per image, are enclosed in a list.
 
@@ -83,7 +48,6 @@ def get_roi_default(tiff_data):
     """
 
     ROI_info = {}
-    ROI_img = []
     ROI_data = []
     ROI_nb_pixels_list = []
     ROI_start_pixel_list = []
@@ -109,8 +73,6 @@ def get_roi_default(tiff_data):
         ROI_end_pixel_list.append(ROI_end_pixel)
         ROI_Original_ratio_list.append("20%")
 
-        ROI_img.append(Image.fromarray(ROI_data_temp))
-
         ROI_data.append(ROI_data_temp)
 
     # dict enclosing info about the ROI
@@ -120,30 +82,27 @@ def get_roi_default(tiff_data):
     ROI_info["ROI_Original_ratio"] = ROI_Original_ratio_list
     ROI_info = pd.DataFrame(ROI_info)
 
-    return [ROI_info, ROI_img, ROI_data]
+    return ROI_info, ROI_data
 
 
+"""
 # ex1: one image in tiff file
-img = get_images_from_multi_tiff(path11)
-get_roi_default(img)[0]  # df
-get_roi_default(img)[1][0]  # image
+img = cm.get_images_from_multi_tiff(path_homo)
+roi_df, roi_array = get_roi_default(img)
 
 # ex1: 2 images in tiff file
-img = get_images_from_multi_tiff(path1)
-get_roi_default(img)[0]  # df
-get_roi_default(img)[1][0]
-get_roi_default(img)[1][1]  # image
-get_roi_default(img)[1][1]  # image
-get_roi_default(img)[2][0]  # matrix 1
-get_roi_default(img)[2][0]  # matrix 2
-
-# 3. Compute CV
+img = cm.get_images_from_multi_tiff(path_cv)
+roi_df, roi_array = get_roi_default(img)
+"""
 
 
-def get_segmented_image(imge):
+# 2. Compute CV
+
+
+def get_segmented_image(img):
     """
     Given a 2D np.array, it replaces all the pixels with an intensity below
-    a threshold by 0 as well as artifacts connected to image border.
+    a threshold otsu value by 0 as well as artifacts connected to image border.
 
     Parameters
     ----------
@@ -158,22 +117,27 @@ def get_segmented_image(imge):
 
     """
     # apply threshold
-    thresh = threshold_otsu(imge)
-    bw = closing(imge > thresh, square(3))
-
+    thresh = threshold_otsu(img)
+    # boolean matrice: True represent the pixels of interest
+    bw = closing(img > thresh, square(3))
     # remove artifacts connected to image border
     cleared = clear_border(bw)
-    xtot, ytot = np.shape(imge)
+
+    # get segmented image
+    xtot, ytot = np.shape(img)
+
     for i in range(xtot):
         for j in range(ytot):
             if not cleared[i, j]:
-                imge[i, j] = 0
-    return imge
+                img[i, j] = 0
+    return img
 
 
+"""
 # ex:
-img = get_images_from_multi_tiff(path1)[0]
+img = cm.get_images_from_multi_tiff(path_cv)[0]
 get_segmented_image(img)
+"""
 
 
 def get_non_zero_vec_from_seg_image(img):
@@ -195,9 +159,11 @@ def get_non_zero_vec_from_seg_image(img):
     return non_zero_vec
 
 
+"""
 # ex:
-img = get_images_from_multi_tiff(path1)[0]
+img = cm.get_images_from_multi_tiff(path_cv)[0]
 get_non_zero_vec_from_seg_image(img)
+"""
 
 
 def get_cv_table_global(tiff_data):
@@ -255,15 +221,18 @@ def get_cv_table_global(tiff_data):
     return CV_df
 
 
+"""
 # ex1: one image in tiff file
-img = get_images_from_multi_tiff(path11)
+img = cm.get_images_from_multi_tiff(path_cv)
 get_cv_table_global(img)
 
 # ex2: 2 images in tiff file
-img = get_images_from_multi_tiff(path11)
+img = cm.get_images_from_multi_tiff(path_cv)
 get_cv_table_global(img)
+"""
 
-# 4. Report: Get Tiff images with ROIs marked on them.
+
+# 3. Report: Get Tiff images with ROIs marked on them.
 
 
 def get_original_with_marked_roi(tiff_data):
@@ -284,96 +253,37 @@ def get_original_with_marked_roi(tiff_data):
     """
 
     image_list = []
-    if type(tiff_data) == list:
-        roi = get_roi_default(tiff_data)
-        roi_info = roi[0]
-        roi_data = tiff_data
-        for i in range(len(tiff_data)):
-            x0, y0 = roi_info["ROI_start_pixel"][i]
-            xf, yf = roi_info["ROI_end_pixel"][i]
+    roi_info, roi_arrays = get_roi_default(tiff_data)
 
-            roi_temp = roi_data[i]
-            cv2.rectangle(roi_temp, (x0, y0), (xf, yf), (255, 0, 0), 1)
-            image_list.append(Image.fromarray(roi_temp, mode="L"))
+    for i in range(len(tiff_data)):
+        x0, y0 = roi_info["ROI_start_pixel"][i]
+        xf, yf = roi_info["ROI_end_pixel"][i]
 
-    else:
-        roi = get_roi_default(tiff_data)
-        roi_info = roi[0]
-        roi_data = roi[2]
+        roi_temp = tiff_data[i]
 
-        x0, y0 = roi_info["ROI_start_pixel"][0]
-        xf, yf = roi_info["ROI_end_pixel"][0]
-
-        cv2.rectangle(roi_data, (x0, y0), (xf, yf), (255, 0, 0), 1)
-        image_list.append(Image.fromarray(roi_data, mode="L"))
+        rr, cc = polygon_perimeter([x0, x0, xf, xf],
+                                   [y0, yf, yf, y0],
+                                   shape=roi_temp.shape,
+                                   clip=True)
+        roi_temp[rr, cc] = 255
+        image_list.append(Image.fromarray(roi_temp, mode="L"))
 
     return image_list
 
 
+"""
 # ex1: one image in tiff file
-img = get_images_from_multi_tiff(path11)
+img = cm.get_images_from_multi_tiff(path_cv)
 get_original_with_marked_roi(img)[0]
 
 # ex2: 2 images in tiff file
-img = get_images_from_multi_tiff(path1)
+img = cm.get_images_from_multi_tiff(path_cv)
 get_original_with_marked_roi(img)[0]
 get_original_with_marked_roi(img)[1]
+"""
 
 
-# 5. Report : Microscopie info
-
-
-def get_microscopy_info(Microscope_type, Wavelength,
-                        NA, Sampling_rate, Pinhole):
-    """
-    Organize microscopy info provided by the user into a dataframe.
-
-    Parameters
-    ----------
-    Microscope_type : str
-
-    Wavelength : float
-        In nm.
-    NA : int or float
-        Numerical aperture.
-    Sampling_rate : str
-        In number of pixels. Ex: "1.0x1.0x1.0".
-    Pinhole : int or float
-        In airy units.
-
-    Returns
-    -------
-    MicroscopyInfo : TYPE
-        DESCRIPTION.
-
-    """
-
-    info_values = [Microscope_type, Wavelength, NA, Sampling_rate, Pinhole]
-    info_labels = ["Microscope type",
-                   "Wavelength",
-                   "NA",
-                   "Sampling rate",
-                   "Pinhole"]
-
-    # add units to info_labels
-    info_units = ["", "(nm)", "", "pixel", "(airy units)"]
-    info_labels = [i+" "+info_units[info_labels.index(i)] for i in info_labels]
-
-    # organize result in a dataframe
-    MicroscopyInfo_dict = {}
-    MicroscopyInfo_dict["Labels"] = info_labels
-    MicroscopyInfo_dict["Values"] = info_values
-
-    MicroscopyInfo = pd.DataFrame(MicroscopyInfo_dict)
-
-    return MicroscopyInfo
-
-
-# ex:
-get_microscopy_info("Confocal", 460.0, 1.4, "1.0x1.0x1.0", 1.0)
-
-
-# 6. Get histogram : nb of pixels per intensity values
+# 4. Get histogram : nb of pixels per intensity values
 
 
 def get_hist_data(img):
@@ -404,14 +314,16 @@ def get_hist_data(img):
     # build a dataframe
     intensity_value, nb_pixel = np.unique(ball_intensity_vec,
                                           return_counts=True)
-    hist_data = np.array([[intensity_value, nb_pixel]])
 
-    return hist_data
+    return intensity_value, nb_pixel
 
 
+"""
 # ex:
-img = get_roi_default(get_images_from_multi_tiff(path1))[2]
-get_hist_data(img[0])
+img = cm.get_images_from_multi_tiff(path_cv)
+roi_df, roi_arrays = get_roi_default(img)
+get_hist_data(roi_arrays[0])
+"""
 
 
 def get_hist_nbpixel_vs_grayintensity(tiff_data):
@@ -433,12 +345,13 @@ def get_hist_nbpixel_vs_grayintensity(tiff_data):
     fig = plt.figure()
     colors = ["r", "g", "b", "c", "m", "y", "k", "w"]
 
-    roi_list = get_roi_default(tiff_data)[2]
-    for i in range(len(roi_list)):
-        hist_data = get_hist_data(roi_list[i])
-        plt.plot(hist_data[0][0], hist_data[0][1],
-                 marker=".", markersize=0.2,  color=colors[i],
-                 label="ROI " + str(i), linewidth=0.8, figure=fig)
+    roi_arrays = get_roi_default(tiff_data)[1]
+    for i in range(len(roi_arrays)):
+        hist_x, hist_y = get_hist_data(roi_arrays[i])
+        plt.plot(
+            hist_x, hist_y, marker=".", markersize=0.2, color=colors[i],
+            label="ROI " + str(i), linewidth=0.8, figure=fig
+            )
 
     plt.title("Intensity histogram", figure=fig)
     plt.xlim((0, 256))
@@ -450,22 +363,20 @@ def get_hist_nbpixel_vs_grayintensity(tiff_data):
     return fig
 
 
+"""
 # ex:
-img = get_images_from_multi_tiff(path1)
+img = cm.get_images_from_multi_tiff(path_cv)
 get_hist_nbpixel_vs_grayintensity(img)
-
+"""
 
 """
 Generate CV report Given 1 .tif file enclosing one or more 2D images.
 """
 
 
-def get_cv_report_elements(tiff_data,
-                           Microscope_type,
-                           Wavelength,
-                           NA,
-                           Sampling_rate,
-                           Pinhole):
+def get_cv_report_elements(
+        tiff_data, Microscope_type, Wavelength, NA, Sampling_rate, Pinhole
+        ):
     """
     Generate the different componenent of the CV report and stock them in
     a list.
@@ -506,11 +417,9 @@ def get_cv_report_elements(tiff_data,
     img_original_marked_roi = get_original_with_marked_roi(roi_data)
 
     # Get Microscope info dataframe
-    MicroscopyInfo = get_microscopy_info(Microscope_type,
-                                         Wavelength,
-                                         NA,
-                                         Sampling_rate,
-                                         Pinhole)
+    MicroscopyInfo = cm.get_microscopy_info(
+        Microscope_type, Wavelength, NA, Sampling_rate, Pinhole
+        )
 
     # Get CV table
     CV = get_cv_table_global(roi_data)
@@ -522,20 +431,22 @@ def get_cv_report_elements(tiff_data,
     return CVReportComponents
 
 
+"""
 # ex1:
-img = get_images_from_multi_tiff(path1)
+img = cm.get_images_from_multi_tiff(path_cv)
 CVreport_elements_1 = get_cv_report_elements(img, "Confocal", 460,
                                              1.4, "1.0x1.0x1.0", 1)
 CVreport_elements_1[0]
 CVreport_elements_1[1]
 CVreport_elements_1[2]
 CVreport_elements_1[3]
+"""
 
 
-def save_cv_report_elements(tiff_path,
-                            output_dir,
-                            Microscope_type, Wavelength,
-                            NA, Sampling_rate, Pinhole):
+def save_cv_report_elements(
+        tiff_path, output_dir, Microscope_type, Wavelength,
+        NA, Sampling_rate, Pinhole
+        ):
     """
     Save the different elements of the CV componenent in a chosen directory.
 
@@ -567,13 +478,11 @@ def save_cv_report_elements(tiff_path,
 
     """
 
-    tiff_data = get_images_from_multi_tiff(tiff_path)
+    tiff_data = cm.get_images_from_multi_tiff(tiff_path)
 
-    CVReportElements_temp = get_cv_report_elements(tiff_data,
-                                                   Microscope_type,
-                                                   Wavelength,
-                                                   NA, Sampling_rate,
-                                                   Pinhole)
+    CVReportElements_temp = get_cv_report_elements(
+        tiff_data, Microscope_type, Wavelength, NA, Sampling_rate, Pinhole
+        )
 
     OriginalWithMarkedROIs = CVReportElements_temp[0]
     MicroscopyInfo = CVReportElements_temp[1]
@@ -582,11 +491,12 @@ def save_cv_report_elements(tiff_path,
 
     if len(OriginalWithMarkedROIs) > 1:
         for i in range(len(OriginalWithMarkedROIs)):
-            OriginalWithMarkedROIs[i].save(fp=output_dir+str(i)+".ROI.png",
-                                           format="PNG")
+            OriginalWithMarkedROIs[i].save(
+                fp=output_dir+str(i)+".ROI.png", format="PNG"
+                )
     else:
-        OriginalWithMarkedROIs[0].save(fp=output_dir+"ROI.png",
-                                       format="PNG")
+        OriginalWithMarkedROIs[0].save(
+            fp=output_dir+"ROI.png", format="PNG")
 
     MicroscopyInfo.to_csv(output_dir+"MicroscopyInfo.csv")
     HistNbPixelVSGrayScale.savefig(output_dir+"Hist.png",
@@ -594,10 +504,10 @@ def save_cv_report_elements(tiff_path,
                                    bbox_inches='tight')
     CV_df.to_csv(output_dir+"CV.csv")
 
-    # Image independent outputs
 
+"""
 # ex1
-output_path_dir = "/Users/Youssef/Documents/IBDML/MetroloJ-for-python/CV_output_files/"
-save_cv_report_elements(path1, output_path_dir,
+save_cv_report_elements(path_cv, output_path_dir,
                         "Confocal", 460, 1.4,
                         "1.0x1.0x1.0", 1)
+"""
