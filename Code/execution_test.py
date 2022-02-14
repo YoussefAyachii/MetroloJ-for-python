@@ -21,11 +21,11 @@ output_path_cv = "/Users/Youssef/Documents/IBDML/MetroloJ-for-python/" + \
 cv.save_cv_report_elements(
     tiff_path=path_cv,
     output_dir=output_path_cv,
-    Microscope_type="confocal",
-    Wavelength=458,
+    microscope_type="confocal",
+    wavelength=458,
     NA=1,
-    Sampling_rate="1x1x1",
-    Pinhole=1)
+    sampling_rate="1x1x1",
+    pinhole=1)
 
 
 # save homogeneiety report elements
@@ -37,8 +37,8 @@ output_path_homo = "/Users/Youssef/Documents/IBDML/MetroloJ-for-python/" + \
 homo.save_homogeneity_report_elements(
     tiff_path=path_homo,
     output_dir=output_path_homo,
-    Microscope_type="confocal",
-    Wavelength=458,
+    microscope_type="confocal",
+    wavelength=458,
     NA=1,
-    Sampling_rate="1x1x1",
-    Pinhole=1)
+    sampling_rate="1x1x1",
+    pinhole=1)
