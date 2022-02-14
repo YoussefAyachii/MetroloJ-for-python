@@ -13,37 +13,6 @@ import pandas as pd
 from PIL import Image
 
 
-def get_images_from_multi_tiff2(path):
-    """
-    Import .tif file from a given path
-
-    Parameters
-    ----------
-    path : str
-        .tif file path.
-
-    Returns
-    -------
-    tiff_images : list
-        retrns list of np.arrays enclosed in the .tif file.
-
-    """
-    img = Image.open(path)
-    tiff_images = []
-    for i in range(img.n_frames):
-        img.seek(i)
-        tiff_images.append(np.array(img))
-    return tiff_images
-
-
-"""
-img = get_images_from_multi_tiff2(path_cv)
-Image.fromarray(img[0])
-Image.fromarray((img[0] * 255).astype(np.uint8))
-img[0].shape
-"""
-
-
 def get_images_from_multi_tiff(path):
     """
     Import .tif file from a given path and convert it to a 3d np.array where
