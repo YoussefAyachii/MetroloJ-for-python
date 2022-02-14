@@ -1,0 +1,10 @@
+,location,intensity,intensity relative to max
+0,top-left corner,109,0.7266666666666667
+1,upper-middle pixel,124,0.8266666666666667
+2,top-right corner,116,0.7733333333333333
+3,left-middle pixel,133,0.8866666666666667
+4,"maximum found at [219, 305]",150,1.0
+5,right-middle pixel,129,0.86
+6,bottom-left corner,123,0.82
+7,bottom-middle pixel,135,0.9
+8,bottom-right corner,115,0.7666666666666667
