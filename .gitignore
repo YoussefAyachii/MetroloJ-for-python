@@ -2,4 +2,5 @@
 .DS_store
 code/__pycache__
 code/.DS_Store
-outputs/Homogeneity_output_files/.DS_store
+outputs/homogeneity_outputs/.DS_store
+outputs/cv_outputs/.DS_store
