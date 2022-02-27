@@ -45,7 +45,7 @@ def get_images_from_multi_tiff(path):
 
 
 """
-img = get_images_from_multi_tiff2(path_cv)
+img = get_images_from_multi_tiff(path_cv)
 img[0]
 Image.fromarray((-img[0]*255).astype(np.uint8))
 """

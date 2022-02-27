@@ -404,13 +404,11 @@ def get_cv_report_elements(
             intensities of the segemented ROI of each given np.array.
     """
 
-    roi_data = tiff_data
-
     # Get Histogram : Nbpixel VS Gray scale
-    hist_nbpixels_vs_grayscale = get_hist_nbpixel_vs_grayintensity(roi_data)
+    hist_nbpixels_vs_grayscale = get_hist_nbpixel_vs_grayintensity(tiff_data)
 
     # Get Images with Marked ROIs on them
-    img_original_marked_roi = get_original_with_marked_roi(roi_data)
+    img_original_marked_roi = get_original_with_marked_roi(tiff_data)
 
     # Get Microscope info dataframe
     microscopy_info_table = cm.get_microscopy_info(
@@ -418,7 +416,7 @@ def get_cv_report_elements(
         )
 
     # Get cv table
-    cv = get_cv_table_global(roi_data)
+    cv = get_cv_table_global(tiff_data)
     cv_report_elements = [img_original_marked_roi,
                           microscopy_info_table,
                           hist_nbpixels_vs_grayscale,
@@ -436,6 +434,7 @@ cvreport_elements_1[0]
 cvreport_elements_1[1]
 cvreport_elements_1[2]
 cvreport_elements_1[3]
+Image.fromarray(cvreport_elements_1[0])
 """
 
 
