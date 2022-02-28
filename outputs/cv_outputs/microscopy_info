@@ -1,0 +1,6 @@
+,Labels,Values
+0,Microscope type,Confocal
+1,wavelength (nm),460
+2,Nmerical Aperture,1.4
+3,Sampling rate (pixel),1.0x1.0x1.0
+4,pinhole (airy units),1
