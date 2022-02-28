@@ -25,12 +25,6 @@ from skimage.measure import regionprops
 import common_module as cm  # local module
 
 
-"""
-Homogeneity report
-Code tested on one image .tif file (from homogeneity samples)
-"""
-
-
 # 1. normalized intensity report
 
 
@@ -107,7 +101,8 @@ def get_max_intensity_region_table(img):
 
 """
 # ex:
-img = Image.open(path_homo)
+path_homo = "/Users/Youssef/Documents/IBDML/Data/homogeneity/lame/" + \
+    "homogeneite10zoom1-488.tif"
 img = get_norm_intensity_matrix(img)
 max_intensity_region_df = get_max_intensity_region_table(img)
 """
@@ -453,6 +448,38 @@ def save_homogeneity_report_elements(
         tiff_path, output_dir, microscope_type,
         wavelength, NA, sampling_rate, pinhole
         ):
+    """
+    Save the different elements of the homogeneity componenent in a chosen
+    directory.
+
+    Parameters
+    ----------
+    tiff_path : str
+        .tif file path. .tif file must contain one or more 2D images or
+        a single 3D image.
+    output_dir : str
+        Output directory path.
+    microscope_type : str
+
+    wavelength : float
+        In nm.
+    NA : int or float
+        Numerical aperture.
+    sampling_rate : str
+        In number of pixels. Ex: "1.0x1.0x1.0".
+    pinhole : int or float
+        In airy units.
+
+    Returns
+    -------
+        1. Save as png: normalized intensity profile of the image.
+        2. Save as csv: microscopy info dataframe
+        3. Save as png: intensity plot of the mid horizontal, mid vertical and
+        the two diagonal lines of the image.
+        4. Save as csv: dataframe showing the intensity values of 9 specific
+        pixels and their ratio over the maximum intensity value of the array.
+
+    """
 
     homo_report_elements = get_homogeneity_report_elements(
         tiff_path, microscope_type, wavelength, NA, sampling_rate, pinhole
@@ -483,7 +510,7 @@ def save_homogeneity_report_elements(
 """
 # ex1:
 output_path_homo = "/Users/Youssef/Documents/IBDML/MetroloJ-for-python/"+\
-    "Homogeneity_output_files/"
+    "outputs/homogeneity_outputs/"
 save_homogeneity_report_elements(
     path_homo, output_path_homo, "Confocal", 460, 1.4, "1.0x1.0x1.0", 1
     )

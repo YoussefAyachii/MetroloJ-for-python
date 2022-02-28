@@ -9,13 +9,37 @@ from skimage.morphology import closing, square
 from skimage.color import label2rgb
 from skimage.draw import polygon_perimeter, circle_perimeter
 
-path_cv = "/Users/bottimacintosh/Documents/M2_CMB/IBDML/Data/CV/cv.comparatif.tif"
+path_cv = "/Users/Youssef/Documents/IBDML/Data/CV/cv.comparatif.tif"
 
 
-def get_marked_roi_and_label_3d(tiff_data, output_dir):
+def get_marked_roi_and_label_3d(tiff_data, output_dir=None):
+    """
+    This function:
+    - mark by diffrent color the pixels that are considered when computing
+    the cv value, i.e. having a higher intensity than the threshold otsu
+    value.
+    - mark by a red rectangle the region of pixels having an intensity higher
+    than a threshold otsu
+    which are used
+    - mark by a white rectangle the roi region, i.e. the central 20% region
+    of the inputed image.
+
+    Parameters
+    ----------
+    tiff_data : numpay.ndarray
+        3d np.array representing the image data.
+    output_dir : str, optional
+        Output directory path. The default is None.
+
+    Returns
+    -------
+    fig_list : list
+        1D list of figures of type matplotlib.figure.Figure.
+
+    """
     fig_list = []
     for i in range(len(tiff_data)):
-        image = tiff_data[i]
+        image = tiff_data[i].astype(np.uint8)
         thresh = threshold_otsu(image)
         bw = closing(image > thresh, square(3))
 
@@ -56,20 +80,24 @@ def get_marked_roi_and_label_3d(tiff_data, output_dir):
 
         ax.set_axis_off()
         plt.tight_layout()
-        # plt.show()
+        plt.show()
         # plt.axis(off)
         fig_list.append(fig)
-        plt.savefig(output_dir+"test"+str(i)+".png",
-                    bbox_inches='tight',
-                    pad_inches=0)
+
+        if output_dir is not None:
+            plt.savefig(output_dir+"test"+str(i)+".png",
+                        bbox_inches='tight',
+                        pad_inches=0)
     return fig_list
 
 
 """
 tiff_data = cm.get_images_from_multi_tiff(path_cv)
-fig1 = get_marked_roi_and_label_3d(tiff_data, output_dir)
-plt.savefig("test.png", bbox_inches='tight')
-output_dir = "/Users/bottimacintosh/Desktop/"
+output_dir = "/Users/Youssef/Desktop/"
+figure = get_marked_roi_and_label_3d(tiff_data)
+figure[0]
+figure[1]
+figure = get_marked_roi_and_label_3d(tiff_data, output_dir)
 """
 
 

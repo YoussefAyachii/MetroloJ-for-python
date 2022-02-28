@@ -18,15 +18,17 @@ Note: rois are defined as the central 20% of the given image.
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
+
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 
 from skimage.filters import threshold_otsu
 from skimage.segmentation import clear_border
 from skimage.morphology import closing, square
 from skimage.draw import polygon_perimeter
-
-from PIL import Image
+from skimage.color import label2rgb
+from skimage.measure import label, regionprops
 
 import common_module as cm
 
@@ -233,53 +235,93 @@ get_cv_table_global(img)
 # 3. Report: Get Tiff images with ROIs marked on them.
 
 
-def get_original_with_marked_roi(tiff_data):
+def get_marked_roi_and_label(tiff_data, output_dir=None):
     """
-    Add a rectangle on the original image which representing the ROI, i.e.
-    the central 20%.
+    This function:
+    - labelise by a diffrent color the pixels that are considered when
+    computing the cv value, i.e. having a higher intensity than the
+    threshold otsu value.
+    - mark by a red rectangle the region of pixels having an intensity higher
+    than a threshold otsu
+    which are used
+    - mark by a white rectangle the roi region, i.e. the central 20% region
+    of the inputed image.
 
     Parameters
     ----------
-    tiff_data : list
-        list of images in a 2d np.array format.
+    tiff_data : numpay.ndarray
+        3d np.array representing the image data.
+    output_dir : str, optional
+        Output directory path. The default is None.
 
     Returns
     -------
-    image_list : list
-        list of images of type PIL.Image.Image.
+    fig_list : list
+        1D list of figures of type matplotlib.figure.Figure.
 
     """
+    fig_list = []
+    for i in range(len(tiff_data)):
+        image = tiff_data[i].astype(np.uint8)
+        thresh = threshold_otsu(image)
+        bw = closing(image > thresh, square(3))
 
-    image_list = []
-    roi_info, roi_arrays = get_roi_default(tiff_data)
-    nb_images = roi_arrays.shape[0]
+        # limit the labelization to the roi region
+        # roi coordinates
+        roi_info, roi_arrays = get_roi_default(tiff_data)
+        roi_minr, roi_minc = roi_info["ROI_start_pixel"][0]
+        roi_maxr, roi_maxc = roi_info["ROI_end_pixel"][0]
 
-    for i in range(nb_images):
-        x0, y0 = roi_info["ROI_start_pixel"][i]
-        xf, yf = roi_info["ROI_end_pixel"][i]
+        # remove outside roi region
+        cleared = clear_border(bw, buffer_size=int((512/2)-roi_minr))
 
-        rr, cc = polygon_perimeter([x0, x0, xf, xf],
-                                   [y0, yf, yf, y0],
+        # label image regions
+        label_image = label(cleared)
+
+        # set background to transparent
+        image_label_overlay = label2rgb(label_image, image=image, bg_label=0)
+
+        # mark roi on image_label_overlay
+        rr, cc = polygon_perimeter([roi_minr, roi_minr, roi_maxr, roi_maxr],
+                                   [roi_minc, roi_maxc, roi_maxc, roi_minc],
                                    shape=tiff_data[i].shape,
                                    clip=True)
-        tiff_data[i][rr, cc] = 255
-        image_temp = Image.fromarray((-tiff_data[i]*255).astype(np.uint8))
-        image_list.append(image_temp)
+        image_label_overlay[rr, cc, :] = 255
 
-    return image_list
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.imshow(image_label_overlay)
+
+        for region in regionprops(label_image):
+            minr, minc, maxr, maxc = region.bbox
+            # take regions with large enough areas and inside the ROI
+            if region.area >= 100:
+                # draw rectangle around segmented coins
+                rect = mpatches.Rectangle((minc, minr), maxc - minc,
+                                          maxr - minr, fill=False,
+                                          edgecolor='red', linewidth=2)
+                ax.add_patch(rect)
+
+        ax.set_axis_off()
+        plt.tight_layout()
+        fig_list.append(fig)
+
+        if output_dir is not None:
+            plt.savefig(output_dir+str(i)+".roi.png",
+                        bbox_inches='tight',
+                        pad_inches=0,
+                        format="png")
+        plt.show()
+    return fig_list
 
 
 """
-# ex1: one image in tiff file
-img = cm.get_images_from_multi_tiff(path_homo)
-get_original_with_marked_roi(img)[0]
-
-# ex2: 2 images in tiff file
-img = cm.get_images_from_multi_tiff(path_cv)
-get_original_with_marked_roi(img)[0]
-get_original_with_marked_roi(img)[1]
+tiff_data = cm.get_images_from_multi_tiff(path_cv)
+output_dir = "/Users/Youssef/Desktop/"
+figure = get_marked_roi_and_label(tiff_data)
+figure[0]
+figure[1]
+figure = get_marked_roi_and_label(tiff_data, output_dir)
 """
-
 
 # 4. Get histogram : nb of pixels per intensity values
 
@@ -408,7 +450,7 @@ def get_cv_report_elements(
     hist_nbpixels_vs_grayscale = get_hist_nbpixel_vs_grayintensity(tiff_data)
 
     # Get Images with Marked ROIs on them
-    img_original_marked_roi = get_original_with_marked_roi(tiff_data)
+    img_original_marked_roi_label = get_marked_roi_and_label(tiff_data)
 
     # Get Microscope info dataframe
     microscopy_info_table = cm.get_microscopy_info(
@@ -417,7 +459,7 @@ def get_cv_report_elements(
 
     # Get cv table
     cv = get_cv_table_global(tiff_data)
-    cv_report_elements = [img_original_marked_roi,
+    cv_report_elements = [img_original_marked_roi_label,
                           microscopy_info_table,
                           hist_nbpixels_vs_grayscale,
                           cv]
@@ -431,10 +473,11 @@ img = cm.get_images_from_multi_tiff(path_cv)
 cvreport_elements_1 = get_cv_report_elements(img, "Confocal", 460,
                                              1.4, "1.0x1.0x1.0", 1)
 cvreport_elements_1[0]
+cvreport_elements_1[0][0]
+cvreport_elements_1[0][1]
 cvreport_elements_1[1]
 cvreport_elements_1[2]
 cvreport_elements_1[3]
-Image.fromarray(cvreport_elements_1[0])
 """
 
 
@@ -448,7 +491,8 @@ def save_cv_report_elements(
     Parameters
     ----------
     tiff_path : str
-        .tif file path. .tif file must contain one or more 2D images.
+        .tif file path. .tif file must contain one or more 2D images or
+        a single 3D image.
     output_dir : str
         Output directory path.
     microscope_type : str
@@ -479,21 +523,13 @@ def save_cv_report_elements(
         tiff_data, microscope_type, wavelength, NA, sampling_rate, pinhole
         )
 
-    original_with_marked_roi = cv_report_elements_temp[0]
     microscopy_info_table = cv_report_elements_temp[1]
     hist_nbpixels_vs_grayscale = cv_report_elements_temp[2]
     cv_table = cv_report_elements_temp[3]
 
-    if len(original_with_marked_roi) > 1:
-        for i in range(len(original_with_marked_roi)):
-            original_with_marked_roi[i].save(
-                fp=output_dir+str(i)+".roi.png", format="PNG"
-                )
-    else:
-        original_with_marked_roi[0].save(
-            fp=output_dir+"roi.png", format="PNG")
+    get_marked_roi_and_label(tiff_data, output_dir)
 
-    microscopy_info_table.to_csv(output_dir+"microscopy_info_table.csv")
+    microscopy_info_table.to_csv(output_dir+"microscopy_info")
     hist_nbpixels_vs_grayscale.savefig(
         output_dir+"hist.png",
         format="png",
@@ -504,7 +540,7 @@ def save_cv_report_elements(
 """
 # ex1
 output_path_cv = "/Users/Youssef/Documents/IBDML/"+\
-    "MetroloJ-for-python/cv_output_files/"
+    "MetroloJ-for-python/outputs/cv_outputs/"
 save_cv_report_elements(path_cv, output_path_cv,
                         "Confocal", 460, 1.4,
                         "1.0x1.0x1.0", 1)
