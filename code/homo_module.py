@@ -25,6 +25,12 @@ from skimage.measure import regionprops
 import common_module as cm  # local module
 
 
+"""
+Homogeneity report
+Code tested on one image .tif file (from homogeneity samples)
+"""
+
+
 # 1. normalized intensity report
 
 
@@ -82,7 +88,8 @@ def get_max_intensity_region_table(img):
     properties = regionprops(labeled_foreground, img)
 
     # identify the center of mass of the max intensity area
-    center_of_mass = properties[0].centroid
+    center_of_mass = (int(properties[0].centroid[0]),
+                      int(properties[0].centroid[1]))
 
     # number of pixels of max intensity region
     nb_pixels = properties[0].area
@@ -101,8 +108,7 @@ def get_max_intensity_region_table(img):
 
 """
 # ex:
-path_homo = "/Users/Youssef/Documents/IBDML/Data/homogeneity/lame/" + \
-    "homogeneite10zoom1-488.tif"
+img = Image.open(path_homo)
 img = get_norm_intensity_matrix(img)
 max_intensity_region_df = get_max_intensity_region_table(img)
 """
@@ -238,6 +244,14 @@ def get_intensity_plot(img):
         and the two diagonal lines of a given image.
         the vertical line y=0 on the plot represent to the image center.
 
+    fig_data : pd.DataFrame
+        dataframe representing the data used to generate the fig.
+        the 8 columns are organised by pair with x axis and y axis data:
+            - x_axis_V_seg and y_axis_V_seg
+            - x_axis_H_seg and y_axis_H_seg
+            - x_axis_diagUD and y_axis_diagUD
+            - x_axis_diagDU and y_axis_diagDU
+
     """
 
     xmax, ymax = np.shape(img)
@@ -254,6 +268,22 @@ def get_intensity_plot(img):
     # diagonal DownUp Left Right
     diagDU = get_pixel_values_of_line(img, x0=xmax, y0=0, xf=0, yf=ymax)
 
+    # plot data into pandas array
+    fig_data = {}
+    fig_data["x_axis_V_seg"] = get_x_axis(V_seg)
+    fig_data["y_axis_V_seg"] = V_seg
+
+    fig_data["x_axis_H_seg"] = get_x_axis(H_seg)
+    fig_data["y_axis_H_seg"] = H_seg
+
+    fig_data["x_axis_diagUD"] = get_x_axis(diagUD)
+    fig_data["y_axis_diagUD"] = diagUD
+
+    fig_data["x_axis_diagDU"] = get_x_axis(diagDU)
+    fig_data["y_axis_diagDU"] = diagDU
+
+    fig_data = pd.DataFrame(fig_data)
+
     # plot
     fig = plt.figure()
     plt.plot(get_x_axis(V_seg), V_seg, color="b", label="V_seg", figure=fig)
@@ -267,13 +297,14 @@ def get_intensity_plot(img):
     plt.xlim((min(get_x_axis(diagUD))-25, max(get_x_axis(diagUD))+25))
     plt.legend()
 
-    return fig
+    return fig, fig_data
 
 
 """
 # ex:
 img = cm.get_images_from_multi_tiff(path_homo)[0]
-get_intensity_plot(img)
+get_intensity_plot(img)[0]
+get_intensity_plot(img)[1]
 """
 
 # 4. profile statistics
@@ -393,10 +424,13 @@ def get_homogeneity_report_elements(
     homo_report_elements : list
         List of all the homogeneity report elements:
             1. normalized intensity profile of the image.
-            2. microscopy info dataframe
-            3. intensity plot of the mid horizontal, mid vertical and the two
+            2. np.array used to generate the normalized intensity profile.
+            3. microscopy info dataframe
+            4. intensity plot of the mid horizontal, mid vertical and the two
             diagonal lines of the image.
-            4. dataframe showing the intensity values of 9 specific pixels and
+            5. np.array used to generate the intensity plot of the mid
+            horizontal, mid vertical and the two diagonal lines of the image.
+            6. dataframe showing the intensity values of 9 specific pixels and
             their ratio over the maximum intensity value of the array.
 
 
@@ -406,6 +440,7 @@ def get_homogeneity_report_elements(
 
     # 1. get normalized intensity profile
     norm_intensity_profile = get_norm_intensity_profile(img)
+    norm_intensity_data = get_norm_intensity_matrix(img)
 
     # 2. get microscopy info
     microscopy_info_table = cm.get_microscopy_info(
@@ -416,16 +451,18 @@ def get_homogeneity_report_elements(
     max_intensity_region_table = get_max_intensity_region_table(img)
 
     # 4. get intensity profiles
-    intensity_plot = get_intensity_plot(img)
+    intensity_plot, intensity_plot_data = get_intensity_plot(img)
 
     # 5. get profiles statistics
     profile_stat_table = get_profile_statistics_table(img)
 
     homo_report_elements = [
         norm_intensity_profile,
+        norm_intensity_data,
         max_intensity_region_table,
         microscopy_info_table,
         intensity_plot,
+        intensity_plot_data,
         profile_stat_table]
 
     return homo_report_elements
@@ -441,6 +478,9 @@ Homogeneity_report_elements_1[1]
 Homogeneity_report_elements_1[2]
 Homogeneity_report_elements_1[3]
 Homogeneity_report_elements_1[4]
+Homogeneity_report_elements_1[5]
+Homogeneity_report_elements_1[6]
+
 """
 
 
@@ -448,48 +488,18 @@ def save_homogeneity_report_elements(
         tiff_path, output_dir, microscope_type,
         wavelength, NA, sampling_rate, pinhole
         ):
-    """
-    Save the different elements of the homogeneity componenent in a chosen
-    directory.
-
-    Parameters
-    ----------
-    tiff_path : str
-        .tif file path. .tif file must contain one or more 2D images or
-        a single 3D image.
-    output_dir : str
-        Output directory path.
-    microscope_type : str
-
-    wavelength : float
-        In nm.
-    NA : int or float
-        Numerical aperture.
-    sampling_rate : str
-        In number of pixels. Ex: "1.0x1.0x1.0".
-    pinhole : int or float
-        In airy units.
-
-    Returns
-    -------
-        1. Save as png: normalized intensity profile of the image.
-        2. Save as csv: microscopy info dataframe
-        3. Save as png: intensity plot of the mid horizontal, mid vertical and
-        the two diagonal lines of the image.
-        4. Save as csv: dataframe showing the intensity values of 9 specific
-        pixels and their ratio over the maximum intensity value of the array.
-
-    """
 
     homo_report_elements = get_homogeneity_report_elements(
         tiff_path, microscope_type, wavelength, NA, sampling_rate, pinhole
         )
 
     norm_intensity_profile = homo_report_elements[0]
-    max_intensity_region_table = homo_report_elements[1]
-    microscopy_info_table = homo_report_elements[2]
-    intensity_plot = homo_report_elements[3]
-    profile_stat_table = homo_report_elements[4]
+    norm_intensity_data = pd.DataFrame(homo_report_elements[1])
+    max_intensity_region_table = homo_report_elements[2]
+    microscopy_info_table = homo_report_elements[3]
+    intensity_plot = homo_report_elements[4]
+    intensity_plot_data = homo_report_elements[5]
+    profile_stat_table = homo_report_elements[6]
 
     # .png : Normalized Intensity Profile and Intesity Profile plot
     norm_intensity_profile.savefig(
@@ -502,15 +512,22 @@ def save_homogeneity_report_elements(
                          )
 
     # .csv : Microscopy Info and profile_stat_table
+    norm_intensity_data.to_csv(output_dir+"norm_intensity_data.csv")
     max_intensity_region_table.to_csv(output_dir+"max_region_table.csv")
     microscopy_info_table.to_csv(output_dir+"microscopy_info_table.csv")
+    intensity_plot_data.to_csv(output_dir+"intensity_plot_data.csv")
     profile_stat_table.to_csv(output_dir+"profile_stat_table.csv")
 
 
 """
 # ex1:
-output_path_homo = "/Users/Youssef/Documents/IBDML/MetroloJ-for-python/"+\
-    "outputs/homogeneity_outputs/"
+#output_path_homo = "/Users/Youssef/Documents/IBDML/MetroloJ-for-python/"+\
+#  "Homogeneity_output_files/"
+
+path_homo = "/Users/bottimacintosh/Documents/M2_CMB/IBDML/"+\
+    "Data/homogeneity/lame/homogeneite10zoom1-488.tif"
+output_path_homo = "/Users/bottimacintosh/Documents/M2_CMB/IBDML/"+\
+    "MetroloJ-for-python/outputs/homogeneity_outputs/"
 save_homogeneity_report_elements(
     path_homo, output_path_homo, "Confocal", 460, 1.4, "1.0x1.0x1.0", 1
     )
