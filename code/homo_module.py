@@ -71,8 +71,8 @@ def get_max_intensity_region_table(img):
 
     Returns
     -------
-    center_of_mass: pd.DataFrame.
-        dataframe encolsing the number of pixels, the coordinates of the
+    center_of_mass: dict
+        dict encolsing the number of pixels, the coordinates of the
         center of mass of the and the max intensity value of the max intensity
         area of the provided image.
 
@@ -102,9 +102,7 @@ def get_max_intensity_region_table(img):
         "center of mass": [center_of_mass],
         "max intensity": [max_intensity]
         }
-    max_region_info = pd.DataFrame(
-        max_region_info, index=["max intensity region"]
-        )
+
     return max_region_info
 
 
@@ -258,9 +256,9 @@ def get_intensity_plot(img, save_path=""):
         and the two diagonal lines of a given image.
         the vertical line y=0 on the plot represent to the image center.
 
-    fig_data : pd.DataFrame
-        dataframe representing the data used to generate the fig.
-        the 8 columns are organised by pair with x axis and y axis data:
+    fig_data : dict
+        dict representing the data used to generate the fig.
+        the 8 keys are organised by pair with x axis and y axis data:
             - x_axis_V_seg and y_axis_V_seg
             - x_axis_H_seg and y_axis_H_seg
             - x_axis_diagUD and y_axis_diagUD
@@ -295,8 +293,6 @@ def get_intensity_plot(img, save_path=""):
 
     fig_data["x_axis_diagDU"] = get_x_axis(diagDU)
     fig_data["y_axis_diagDU"] = diagDU
-
-    fig_data = pd.DataFrame(fig_data)
 
     # plot
     fig = plt.figure()
@@ -351,8 +347,8 @@ def get_profile_statistics_table(img):
 
     Returns
     -------
-    profiles_statistics : pd.DataFrame
-        dataframe showing the intensity values of the concerned 9 pixels and
+    profiles_statistics : dict
+        dict showing the intensity values of the concerned 9 pixels and
         their ratio over the maximum intensity value of the array.
 
     """
@@ -400,8 +396,7 @@ def get_profile_statistics_table(img):
     profiles_statistics_dict["intensity relative to max"] = \
         max_intensities_relative
 
-    profiles_statistics = pd.DataFrame(profiles_statistics_dict)
-    return profiles_statistics
+    return profiles_statistics_dict
 
 
 """
@@ -477,12 +472,13 @@ def get_homogeneity_report_elements(
 
     homo_report_elements = [
         norm_intensity_profile,
-        norm_intensity_data,
-        max_intensity_region_table,
+        pd.DataFrame(norm_intensity_data),
+        pd.DataFrame(max_intensity_region_table),
         microscopy_info_table,
         intensity_plot,
-        intensity_plot_data,
-        profile_stat_table]
+        pd.DataFrame(intensity_plot_data),
+        pd.DataFrame(profile_stat_table)
+        ]
 
     return homo_report_elements
 
@@ -513,7 +509,7 @@ def save_homogeneity_report_elements(
         )
 
     norm_intensity_profile = homo_report_elements[0]
-    norm_intensity_data = pd.DataFrame(homo_report_elements[1])
+    norm_intensity_data = homo_report_elements[1]
     max_intensity_region_table = homo_report_elements[2]
     microscopy_info_table = homo_report_elements[3]
     intensity_plot = homo_report_elements[4]
