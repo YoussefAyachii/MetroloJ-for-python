@@ -12,8 +12,7 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 
-
-def get_images_from_multi_tiff(path):
+def get_images_from_multi_tiff(path, nb_img=False):
     """
     Import .tif file from a given path and convert it to a 3d np.array where
     the first dimension represent the image index.
@@ -23,31 +22,61 @@ def get_images_from_multi_tiff(path):
     path : str
         .tif file path.
         the tif file must carry only 2d arrays of the same dimensions.
+    nb_img : int, optional
+        if True, return the nb of images in the tif file.
+        default is False.
 
     Returns
     -------
     tiff_images : np.array
         3d np.array where the first dimension represent the image index.
+        When single=True, tiff_images is a single 2d np.array.
     """
 
     tiff_file = Image.open(path)
     # number of images in the tiff file
     zdim = tiff_file.n_frames
-    # we assume that images from same tiff file have the same size
-    xdim, ydim = np.array(tiff_file).shape
-    # initialization of the desired output
-    tiff_final = np.zeros((zdim, xdim, ydim)).astype(int)
-    # get output
-    for i in range(zdim):
-        tiff_file.seek(i)  # Seeks to the given frame in this sequence file.
-        tiff_final[i] = np.array(tiff_file)
-    return tiff_final
+
+    if zdim == 1:
+        tiff_final = np.array(tiff_file)
+        if nb_img is True:
+            return tiff_final, zdim
+        else:
+            return tiff_final
+
+    else:
+        # we assume that images from same tiff file have the same size
+        xdim, ydim = np.array(tiff_file).shape
+        # initialization of the desired output
+        tiff_final = np.zeros((zdim, xdim, ydim)).astype(int)
+        # get output
+        for i in range(zdim):
+            tiff_file.seek(i)  # Seeks to the given frame in this sequence file.
+            tiff_final[i] = np.array(tiff_file)
+        if nb_img is True:
+            return tiff_final, zdim
+        else:
+            return tiff_final
 
 
 """
-img = get_images_from_multi_tiff(path_cv)
-img[0]
-Image.fromarray((-img[0]*255).astype(np.uint8))
+path_homo="/Users/bottimacintosh/Documents/IBDML/other/" + \
+    "Data/homogeneity/lame/homogeneite10zoom1-488.tif"
+path_cv="/Users/bottimacintosh/Documents/IBDML/other/" + \
+    "Data/CV/cv.comparatif.tif"
+get_images_from_multi_tiff(path_homo)
+get_images_from_multi_tiff(path_homo).shape
+
+get_images_from_multi_tiff(path_cv)
+get_images_from_multi_tiff(path_cv)[0].shape
+
+imgs_np, zdim = get_images_from_multi_tiff(path_homo, nb_img=True)
+imgs_np.shape
+zdim
+
+imgs_np, zdim = get_images_from_multi_tiff(path_cv, nb_img=True)
+imgs_np.shape
+zdim
 """
 
 

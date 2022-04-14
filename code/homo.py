@@ -22,7 +22,7 @@ import pandas as pd
 from skimage import draw
 from skimage.measure import regionprops
 
-import common_module as cm  # local module
+from .common import get_images_from_multi_tiff
 
 
 """
@@ -60,8 +60,9 @@ def get_norm_intensity_matrix(img):
 
 def get_max_intensity_region_table(img):
     """
-    this function finds the max intensity area of the given matrix
-    in order to figure out the center of mass.
+    this function finds the max intensity area of the given image
+    in order to figure out the number of pixels,the center of mass and
+    the max intensity of the corresponding area.
 
     Parameters
     ----------
@@ -70,9 +71,10 @@ def get_max_intensity_region_table(img):
 
     Returns
     -------
-    center_of_mass: np.array.
-        1d np.array encolsing the coordinates of the center of mass of the
-        max intensity area of the provided image.
+    center_of_mass: dict
+        dict encolsing the number of pixels, the coordinates of the
+        center of mass of the and the max intensity value of the max intensity
+        area of the provided image.
 
     """
 
@@ -100,9 +102,7 @@ def get_max_intensity_region_table(img):
         "center of mass": [center_of_mass],
         "max intensity": [max_intensity]
         }
-    max_region_info = pd.DataFrame(
-        max_region_info, index=["max intensity region"]
-        )
+
     return max_region_info
 
 
@@ -114,15 +114,20 @@ max_intensity_region_df = get_max_intensity_region_table(img)
 """
 
 
-def get_norm_intensity_profile(img):
+def get_norm_intensity_profile(img, save_path=""):
     """
     plots the normalized intensity profile of the image.
     the center of mass of the max intensity area is marked in red.
+    If save_path is not empty, the generated figure will be saved as png in
+    the provided path.
 
     Parameters
     ----------
     img : np.arrray
         image on a 2d np.array format.
+    save_path : str, optional
+        path to save the generated figure including filename.
+        The default is "".
 
     Returns
     -------
@@ -143,15 +148,19 @@ def get_norm_intensity_profile(img):
     plt.imshow(norm_intensity_profile)
     plt.colorbar()
     plt.title("normalized intensity profile", figure=fig)
+    if save_path:
+        plt.savefig(str(save_path),
+                    bbox_inches='tight')
 
     return fig
 
 
 """
 # ex:
-img = cm.get_images_from_multi_tiff(path_homo)[0]
+img = common.get_images_from_multi_tiff(path_homo)[0]
 get_norm_intensity_matrix(img)
 get_norm_intensity_profile(img)
+get_norm_intensity_profile(img, save_path="/Users/Youssef/Desktop/")
 """
 
 # 3. intensity profiles
@@ -190,7 +199,7 @@ def get_pixel_values_of_line(img, x0, y0, xf, yf):
 
 """
 # ex:
-img = cm.get_images_from_multi_tiff(path_homo)[0]
+img = common.get_images_from_multi_tiff(path_homo)[0]
 get_pixel_values_of_line(img, 0, 0, 200, 200)
 """
 
@@ -226,16 +235,21 @@ get_x_axis(img_vec)
 """
 
 
-def get_intensity_plot(img):
+def get_intensity_plot(img, save_path=""):
     """
     get the distribution of pixel intensities of the mid
     vertical, mid horizontal and the two diagonal lines of a given image.
     the vertical line y=0 on the plot represent to the image center.
+    If save_path is not empty, the generated figure will be saved as png in
+    the provided path.
 
     Parameters
     ----------
     img : np.array
         image on a 2d np.array format.
+    save_path : str, optional
+        path to save the generated figure inluding file name.
+        The default is "".
 
     Returns
     -------
@@ -244,9 +258,9 @@ def get_intensity_plot(img):
         and the two diagonal lines of a given image.
         the vertical line y=0 on the plot represent to the image center.
 
-    fig_data : pd.DataFrame
-        dataframe representing the data used to generate the fig.
-        the 8 columns are organised by pair with x axis and y axis data:
+    fig_data : dict
+        dict representing the data used to generate the fig.
+        the 8 keys are organised by pair with x axis and y axis data:
             - x_axis_V_seg and y_axis_V_seg
             - x_axis_H_seg and y_axis_H_seg
             - x_axis_diagUD and y_axis_diagUD
@@ -282,8 +296,6 @@ def get_intensity_plot(img):
     fig_data["x_axis_diagDU"] = get_x_axis(diagDU)
     fig_data["y_axis_diagDU"] = diagDU
 
-    fig_data = pd.DataFrame(fig_data)
-
     # plot
     fig = plt.figure()
     plt.plot(get_x_axis(V_seg), V_seg, color="b", label="V_seg", figure=fig)
@@ -297,13 +309,18 @@ def get_intensity_plot(img):
     plt.xlim((min(get_x_axis(diagUD))-25, max(get_x_axis(diagUD))+25))
     plt.legend()
 
+    if save_path:
+        plt.savefig(str(save_path),
+                    bbox_inches='tight')
+
     return fig, fig_data
 
 
 """
 # ex:
-img = cm.get_images_from_multi_tiff(path_homo)[0]
+img = common.get_images_from_multi_tiff(path_homo)[0]
 get_intensity_plot(img)[0]
+get_intensity_plot(img, save_path="/Users/Youssef/Desktop/")
 get_intensity_plot(img)[1]
 """
 
@@ -332,8 +349,8 @@ def get_profile_statistics_table(img):
 
     Returns
     -------
-    profiles_statistics : pd.DataFrame
-        dataframe showing the intensity values of the concerned 9 pixels and
+    profiles_statistics : dict
+        dict showing the intensity values of the concerned 9 pixels and
         their ratio over the maximum intensity value of the array.
 
     """
@@ -381,8 +398,7 @@ def get_profile_statistics_table(img):
     profiles_statistics_dict["intensity relative to max"] = \
         max_intensities_relative
 
-    profiles_statistics = pd.DataFrame(profiles_statistics_dict)
-    return profiles_statistics
+    return profiles_statistics_dict
 
 
 """
@@ -436,14 +452,14 @@ def get_homogeneity_report_elements(
 
     """
     # we assume that .tif images for homogeneity carry one single image
-    img = cm.get_images_from_multi_tiff(path)[0]
+    img = common.get_images_from_multi_tiff(path)[0]
 
     # 1. get normalized intensity profile
     norm_intensity_profile = get_norm_intensity_profile(img)
     norm_intensity_data = get_norm_intensity_matrix(img)
 
     # 2. get microscopy info
-    microscopy_info_table = cm.get_microscopy_info(
+    microscopy_info_table = common.get_microscopy_info(
         microscope_type, wavelength, NA, sampling_rate, pinhole
         )
 
@@ -458,12 +474,13 @@ def get_homogeneity_report_elements(
 
     homo_report_elements = [
         norm_intensity_profile,
-        norm_intensity_data,
-        max_intensity_region_table,
+        pd.DataFrame(norm_intensity_data),
+        pd.DataFrame(max_intensity_region_table),
         microscopy_info_table,
         intensity_plot,
-        intensity_plot_data,
-        profile_stat_table]
+        pd.DataFrame(intensity_plot_data),
+        pd.DataFrame(profile_stat_table)
+        ]
 
     return homo_report_elements
 
@@ -494,7 +511,7 @@ def save_homogeneity_report_elements(
         )
 
     norm_intensity_profile = homo_report_elements[0]
-    norm_intensity_data = pd.DataFrame(homo_report_elements[1])
+    norm_intensity_data = homo_report_elements[1]
     max_intensity_region_table = homo_report_elements[2]
     microscopy_info_table = homo_report_elements[3]
     intensity_plot = homo_report_elements[4]
@@ -521,8 +538,8 @@ def save_homogeneity_report_elements(
 
 """
 # ex1:
-#output_path_homo = "/Users/Youssef/Documents/IBDML/MetroloJ-for-python/"+\
-#  "Homogeneity_output_files/"
+path_homo = "/Users/Youssef/Documents/IBDML/Data/homogeneity/"+\
+    "lame/homogeneite10zoom1-488.tif"
 
 path_homo = "/Users/bottimacintosh/Documents/M2_CMB/IBDML/"+\
     "Data/homogeneity/lame/homogeneite10zoom1-488.tif"
