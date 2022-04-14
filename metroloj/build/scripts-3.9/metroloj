@@ -1,0 +1,3 @@
+#!python
+
+echo "this is a pip package"

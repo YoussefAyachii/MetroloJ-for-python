@@ -1,6 +1,6 @@
 
 .DS_store
-code/__pycache__
-code/.DS_Store
+metroloj/__pycache__
+metroloj/.DS_Store
 outputs/homogeneity_outputs/.DS_store
 outputs/cv_outputs/.DS_store

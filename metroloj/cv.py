@@ -33,7 +33,7 @@ from skimage.draw import polygon_perimeter
 from skimage.color import label2rgb
 from skimage.measure import label, regionprops
 
-from metrologist.metroloj import common as cm
+from metroloj import common as cm
 
 # Get roi (default central 20% of the original image) for a given 2d image
 
