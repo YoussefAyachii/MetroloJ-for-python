@@ -22,7 +22,7 @@ import pandas as pd
 from skimage import draw
 from skimage.measure import regionprops
 
-from .common import get_images_from_multi_tiff
+from .common import get_images_from_multi_tiff, get_microscopy_info
 
 
 """
@@ -452,14 +452,14 @@ def get_homogeneity_report_elements(
 
     """
     # we assume that .tif images for homogeneity carry one single image
-    img = common.get_images_from_multi_tiff(path)[0]
+    img = get_images_from_multi_tiff(path)[0]
 
     # 1. get normalized intensity profile
     norm_intensity_profile = get_norm_intensity_profile(img)
     norm_intensity_data = get_norm_intensity_matrix(img)
 
     # 2. get microscopy info
-    microscopy_info_table = common.get_microscopy_info(
+    microscopy_info_table = get_microscopy_info(
         microscope_type, wavelength, NA, sampling_rate, pinhole
         )
 
