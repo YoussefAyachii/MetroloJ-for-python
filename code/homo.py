@@ -22,7 +22,7 @@ import pandas as pd
 from skimage import draw
 from skimage.measure import regionprops
 
-from .common import get_images_from_multi_tiff
+from .common import get_images_from_multi_tiff, get_microscopy_info
 
 
 """
@@ -126,8 +126,12 @@ def get_norm_intensity_profile(img, save_path=""):
     img : np.arrray
         image on a 2d np.array format.
     save_path : str, optional
+<<<<<<< HEAD:code/homo.py
         path to save the generated figure including filename.
         The default is "".
+=======
+        directory path to save the generated figure. The default is "".
+>>>>>>> b06264951f5ea23f2b5705cb83c910164f108e09:code/homo_module.py
 
     Returns
     -------
@@ -157,7 +161,7 @@ def get_norm_intensity_profile(img, save_path=""):
 
 """
 # ex:
-img = common.get_images_from_multi_tiff(path_homo)[0]
+img = get_images_from_multi_tiff(path_homo)[0]
 get_norm_intensity_matrix(img)
 get_norm_intensity_profile(img)
 get_norm_intensity_profile(img, save_path="/Users/Youssef/Desktop/")
@@ -199,7 +203,7 @@ def get_pixel_values_of_line(img, x0, y0, xf, yf):
 
 """
 # ex:
-img = common.get_images_from_multi_tiff(path_homo)[0]
+img = get_images_from_multi_tiff(path_homo)[0]
 get_pixel_values_of_line(img, 0, 0, 200, 200)
 """
 
@@ -248,8 +252,12 @@ def get_intensity_plot(img, save_path=""):
     img : np.array
         image on a 2d np.array format.
     save_path : str, optional
+<<<<<<< HEAD:code/homo.py
         path to save the generated figure inluding file name.
         The default is "".
+=======
+        directory path to save the generated figure. The default is "".
+>>>>>>> b06264951f5ea23f2b5705cb83c910164f108e09:code/homo_module.py
 
     Returns
     -------
@@ -318,7 +326,7 @@ def get_intensity_plot(img, save_path=""):
 
 """
 # ex:
-img = common.get_images_from_multi_tiff(path_homo)[0]
+img = get_images_from_multi_tiff(path_homo)[0]
 get_intensity_plot(img)[0]
 get_intensity_plot(img, save_path="/Users/Youssef/Desktop/")
 get_intensity_plot(img)[1]
@@ -452,14 +460,14 @@ def get_homogeneity_report_elements(
 
     """
     # we assume that .tif images for homogeneity carry one single image
-    img = common.get_images_from_multi_tiff(path)[0]
+    img = get_images_from_multi_tiff(path)[0]
 
     # 1. get normalized intensity profile
     norm_intensity_profile = get_norm_intensity_profile(img)
     norm_intensity_data = get_norm_intensity_matrix(img)
 
     # 2. get microscopy info
-    microscopy_info_table = common.get_microscopy_info(
+    microscopy_info_table = get_microscopy_info(
         microscope_type, wavelength, NA, sampling_rate, pinhole
         )
 
