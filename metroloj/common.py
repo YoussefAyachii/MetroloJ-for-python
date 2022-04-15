@@ -8,9 +8,11 @@ This common module assemble the commun functions needed to generate elements of
 different MetroloJ reports.
 """
 
+
 import numpy as np
 import pandas as pd
 from PIL import Image
+
 
 def get_images_from_multi_tiff(path, nb_img=False):
     """
@@ -59,27 +61,6 @@ def get_images_from_multi_tiff(path, nb_img=False):
             return tiff_final
 
 
-"""
-path_homo="/Users/bottimacintosh/Documents/IBDML/other/" + \
-    "Data/homogeneity/lame/homogeneite10zoom1-488.tif"
-path_cv="/Users/bottimacintosh/Documents/IBDML/other/" + \
-    "Data/CV/cv.comparatif.tif"
-get_images_from_multi_tiff(path_homo)
-get_images_from_multi_tiff(path_homo).shape
-
-get_images_from_multi_tiff(path_cv)
-get_images_from_multi_tiff(path_cv)[0].shape
-
-imgs_np, zdim = get_images_from_multi_tiff(path_homo, nb_img=True)
-imgs_np.shape
-zdim
-
-imgs_np, zdim = get_images_from_multi_tiff(path_cv, nb_img=True)
-imgs_np.shape
-zdim
-"""
-
-
 def get_microscopy_info(
         microscope_type, wavelength, NA, sampling_rate, pinhole
         ):
@@ -122,9 +103,3 @@ def get_microscopy_info(
     microscopy_info_table = pd.DataFrame(microscopy_info_dict)
 
     return microscopy_info_table
-
-
-"""
-ex:
-get_microscopy_info("Confocal", 460.0, 1.4, "1.0x1.0x1.0", 1.0)
-"""

@@ -35,7 +35,8 @@ from skimage.measure import label, regionprops
 
 from metroloj import common as cm
 
-# Get roi (default central 20% of the original image) for a given 2d image
+
+# 1. Get roi (default central 20% of the original image) for a given 2d image
 
 
 def get_roi_default(tiff_final):
@@ -120,17 +121,6 @@ def get_roi_default(tiff_final):
     return ROI_info, roi_final
 
 
-"""
-# ex1: one image in tiff file
-img = cm.get_images_from_multi_tiff(path_cv)
-roi_df, roi_array = get_roi_default(img[0])
-
-# ex1: 2 images in tiff file
-img = cm.get_images_from_multi_tiff(path_cv)
-roi_df, roi_array = get_roi_default(img)
-"""
-
-
 # 2. Compute cv
 
 
@@ -166,13 +156,6 @@ def get_segmented_image(img):
             if not cleared[i, j]:
                 img[i, j] = 0
     return img
-
-
-"""
-# ex:
-img = cm.get_images_from_multi_tiff(path_cv)[0]
-get_segmented_image(img)
-"""
 
 
 def get_cv_table_global(tiff_data, output_dir=None):
@@ -251,17 +234,6 @@ def get_cv_table_global(tiff_data, output_dir=None):
         pd.DataFrame(cv_dict).to_csv(output_dir+"cv.csv")
 
     return cv_dict
-
-
-"""
-# ex1: one image in tiff file
-img = get_images_from_multi_tiff(path_homo)
-pd.DataFrame(get_cv_table_global(img))
-
-# ex2: 2 images in tiff file
-img = cm.get_images_from_multi_tiff(path_cv)
-pd.DataFrame(get_cv_table_global(img))
-"""
 
 
 # 3. Report: Get Tiff images with ROIs marked on them.
@@ -352,18 +324,6 @@ def get_marked_roi_and_label_single_img(img, show=False, output_path=None):
         return image_label_overlay
 
 
-"""
-img = get_images_from_multi_tiff(path_cv)
-output_path = "/Users/bottimacintosh/Desktop/roi.png"
-get_marked_roi_and_label_single_img(img[1],show=True, output_path)
-get_marked_roi_and_label_single_img(img[0],show=True)
-
-img = get_images_from_multi_tiff(path_cv)
-for i, image in enumerate(img):
-    print(type(image))
-    get_marked_roi_and_label_single_img(image, show=True)
-"""
-
 # get_marked_roi_and_label_multi_img
 
 
@@ -415,15 +375,6 @@ def get_marked_roi_and_label_multi_img(tiff_data, output_dir=None):
                 )
 
     return fig_list
-
-
-"""
-tiff_data = cm.get_images_from_multi_tiff(path_cv)
-output_dir = "/Users/Youssef/Desktop/"
-figures = get_marked_roi_and_label_multi_img(tiff_data, output_dir)
-figures = get_marked_roi_and_label_multi_img(tiff_data)
-get_marked_roi_and_label_multi_img(tiff_data)[0]
-"""
 
 
 # 4. Get histogram : nb of pixels per intensity values
@@ -485,15 +436,6 @@ def get_hist_data(img, nb_img=1):
         return intensity_value_tab, nb_pixel_tab
 
 
-"""
-# ex:
-img = cm.get_images_from_multi_tiff(path_cv)
-roi_df, roi_arrays = get_roi_default(img)
-get_hist_data(roi_arrays[0])
-get_hist_data(img, nb_img=2)
-"""
-
-
 def get_hist_nbpixel_vs_grayintensity(tiff_data, output_path=None):
     """
     For a given list of images in np.array format, return a histogram
@@ -553,17 +495,6 @@ def get_hist_nbpixel_vs_grayintensity(tiff_data, output_path=None):
                     format="png")
 
     return fig
-
-
-"""
-# ex one image:
-img = cm.get_images_from_multi_tiff(path_homo)
-get_hist_nbpixel_vs_grayintensity(img)
-
-# ex multi images:
-img = cm.get_images_from_multi_tiff(path_cv)
-get_hist_nbpixel_vs_grayintensity(img)
-"""
 
 
 def cv_report(
@@ -647,24 +578,3 @@ def cv_report(
 
     return cv_report_elements
 
-
-"""
-# ex1:
-img = cm.get_images_from_multi_tiff(path_cv)
-cvreport_elements_1 = get_cv_report_elements(
-    img, "Confocal", 460, 1.4, "1.0x1.0x1.0", 1
-    )
-cvreport_elements_1[0]
-cvreport_elements_1[0][0]
-cvreport_elements_1[0][1]
-cvreport_elements_1[1]
-cvreport_elements_1[2]
-cvreport_elements_1[3]
-
-# ex2: save
-output_path_cv = "/Users/Youssef/Documents/IBDML/"+\
-    "MetroloJ-for-python/outputs/cv_outputs/"
-cvreport_elements_2 = get_cv_report_elements(
-    img, output_path_cv, "Confocal", 460, 1.4, "1.0x1.0x1.0", 1
-    )
-"""

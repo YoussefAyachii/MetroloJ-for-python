@@ -91,16 +91,6 @@ def get_marked_roi_and_label_3d(tiff_data, output_dir=None):
     return fig_list
 
 
-"""
-tiff_data = cm.get_images_from_multi_tiff(path_cv)
-output_dir = "/Users/Youssef/Desktop/"
-figure = get_marked_roi_and_label_3d(tiff_data)
-figure[0]
-figure[1]
-figure = get_marked_roi_and_label_3d(tiff_data, output_dir)
-"""
-
-
 def get_marked_roi_and_label_2d(tiff_data):
 
     fig_list = []
@@ -149,17 +139,3 @@ def get_marked_roi_and_label_2d(tiff_data):
 
     return fig_list
 
-
-"""
-tiff_data = cm.get_images_from_multi_tiff(path_cv)
-img0 = tiff_data[0]
-img1 = tiff_data[1]
-
-img_marked_roi_and_label0 = get_marked_roi_and_label(img0)
-img_marked_roi_and_label1 = get_marked_roi_and_label(img1)
-
-Image.fromarray(img_marked_roi_and_label0)
-Image.fromarray(img_marked_roi_and_label1)
-
-get_marked_roi_and_label(tiff_data)
-"""

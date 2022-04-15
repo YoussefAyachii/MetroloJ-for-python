@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
 """
 Created on Thu Jan 27 15:32:09 2022
 @author: Youssef Ayachi
@@ -14,6 +15,8 @@ elements:
     mid vertical and the two diagonal lines of the image.
     4. dataframe showing the intensity values of 9 specific pixels and
     their ratio over the maximum intensity value of the array.
+
+Note: Code tested on one image .tif file (from homogeneity samples)
 """
 
 import numpy as np
@@ -23,12 +26,6 @@ from skimage import draw
 from skimage.measure import regionprops
 
 from .common import get_images_from_multi_tiff, get_microscopy_info
-
-
-"""
-Homogeneity report
-Code tested on one image .tif file (from homogeneity samples)
-"""
 
 
 # 1. normalized intensity report
@@ -106,14 +103,6 @@ def get_max_intensity_region_table(img):
     return max_region_info
 
 
-"""
-# ex:
-img = Image.open(path_homo)
-img = get_norm_intensity_matrix(img)
-max_intensity_region_df = get_max_intensity_region_table(img)
-"""
-
-
 def get_norm_intensity_profile(img, save_path=""):
     """
     plots the normalized intensity profile of the image.
@@ -155,14 +144,6 @@ def get_norm_intensity_profile(img, save_path=""):
     return fig
 
 
-"""
-# ex:
-img = common.get_images_from_multi_tiff(path_homo)[0]
-get_norm_intensity_matrix(img)
-get_norm_intensity_profile(img)
-get_norm_intensity_profile(img, save_path="/Users/Youssef/Desktop/")
-"""
-
 # 3. intensity profiles
 
 
@@ -197,13 +178,6 @@ def get_pixel_values_of_line(img, x0, y0, xf, yf):
     return line_pixel_values
 
 
-"""
-# ex:
-img = common.get_images_from_multi_tiff(path_homo)[0]
-get_pixel_values_of_line(img, 0, 0, 200, 200)
-"""
-
-
 def get_x_axis(y_axis):
     """
     get x axis values for the intensity plot given y values.
@@ -225,14 +199,6 @@ def get_x_axis(y_axis):
     # the center of the matrix is 4 pixels not one
     x_axis = x_axis[x_axis != 0]
     return x_axis
-
-
-"""
-# ex:
-img = get_images_from_multi_tiff(path_homo)[0]
-img_vec = get_pixel_values_of_line(img, 0, 0, 200, 200)
-get_x_axis(img_vec)
-"""
 
 
 def get_intensity_plot(img, save_path=""):
@@ -316,14 +282,6 @@ def get_intensity_plot(img, save_path=""):
     return fig, fig_data
 
 
-"""
-# ex:
-img = common.get_images_from_multi_tiff(path_homo)[0]
-get_intensity_plot(img)[0]
-get_intensity_plot(img, save_path="/Users/Youssef/Desktop/")
-get_intensity_plot(img)[1]
-"""
-
 # 4. profile statistics
 
 
@@ -401,16 +359,7 @@ def get_profile_statistics_table(img):
     return profiles_statistics_dict
 
 
-"""
-# ex:
-img = get_images_from_multi_tiff(path_homo)[0]
-get_profile_statistics_table(img)
-"""
-
-
-"""
-REPORT
-"""
+# all report elements functions.
 
 
 def get_homogeneity_report_elements(
@@ -485,22 +434,6 @@ def get_homogeneity_report_elements(
     return homo_report_elements
 
 
-"""
-# ex1:
-Homogeneity_report_elements_1 = get_homogeneity_report_elements(
-    path_homo, "Confocal", 460, 1.4, "1.0x1.0x1.0", 1
-    )
-Homogeneity_report_elements_1[0]
-Homogeneity_report_elements_1[1]
-Homogeneity_report_elements_1[2]
-Homogeneity_report_elements_1[3]
-Homogeneity_report_elements_1[4]
-Homogeneity_report_elements_1[5]
-Homogeneity_report_elements_1[6]
-
-"""
-
-
 def save_homogeneity_report_elements(
         tiff_path, output_dir, microscope_type,
         wavelength, NA, sampling_rate, pinhole
@@ -535,17 +468,3 @@ def save_homogeneity_report_elements(
     intensity_plot_data.to_csv(output_dir+"intensity_plot_data.csv")
     profile_stat_table.to_csv(output_dir+"profile_stat_table.csv")
 
-
-"""
-# ex1:
-path_homo = "/Users/Youssef/Documents/IBDML/Data/homogeneity/"+\
-    "lame/homogeneite10zoom1-488.tif"
-
-path_homo = "/Users/bottimacintosh/Documents/M2_CMB/IBDML/"+\
-    "Data/homogeneity/lame/homogeneite10zoom1-488.tif"
-output_path_homo = "/Users/bottimacintosh/Documents/M2_CMB/IBDML/"+\
-    "MetroloJ-for-python/outputs/homogeneity_outputs/"
-save_homogeneity_report_elements(
-    path_homo, output_path_homo, "Confocal", 460, 1.4, "1.0x1.0x1.0", 1
-    )
-"""

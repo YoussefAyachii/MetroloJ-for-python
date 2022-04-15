@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
 """
 Created on Thu Feb 17 13:49:45 2022
 @author: Youssef
@@ -12,10 +13,7 @@ https://www.openmicroscopy.org/Schemas/Documentation/ \
 
 Note that python-bioformats package uses python-javabridge to start and
 interact with a Java virtual machine.
-"""
 
-
-"""
 Mandatory commands: (from https://pythonhosted.org/python-bioformats/)
     pip install javabridge
     pip install python-bioformats
@@ -50,14 +48,3 @@ def get_tiff_omexml(tiff_path):
     tiff_xml = bioformats.get_omexml_metadata(path=tiff_path)
     tiff_omexml = bioformats.OMEXML(tiff_xml)
     return tiff_omexml
-
-
-"""
-# get sample name
-path_homo = "/Users/Youssef/Documents/IBDML/Data/homogeneity/lame/" + \
-    "homogeneite10zoom1-488.tif"
-get_tiff_omexml(tiff_path=homo_path).image().Name
-
-# print the different information labels
-dir(coloc_omexml)
-"""
