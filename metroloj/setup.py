@@ -11,7 +11,7 @@ setuptools.setup(
      author_email="youssef-ayachi@outlook.com",
      description="A python implementation of ImageJ MetroloJ plugin",
      long_description=long_description,
-   long_description_content_type="text/markdown",
+     long_description_content_type="text/markdown",
      url="https://github.com/javatechy/dokr",
      packages=setuptools.find_packages(),
      classifiers=[
