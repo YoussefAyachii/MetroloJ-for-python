@@ -362,8 +362,14 @@ def get_profile_statistics_table(img):
 # all report elements functions.
 
 
-def get_homogeneity_report_elements(
-        path, microscope_type, wavelength, NA, sampling_rate, pinhole
+def cv_report(
+        tiff_path,
+        output_dir=None,
+        microscope_type="NA",
+        wavelength="NA",
+        NA="NA",
+        sampling_rate="NA",
+        pinhole="NA"
         ):
     """
     Generate the different componenent of the homogeneity report and stock them
@@ -371,10 +377,13 @@ def get_homogeneity_report_elements(
 
     Parameters
     ----------
-    path : str
+    tiff_path : str
         path of .tif single image file.
+    output_dir : str, optional
+        if specified, all returns are saved in the corresponding directory.
+        default is None.
     microscope_type : str
-
+        type of microscope.
     wavelength : float
         In nm.
     NA : int or float
@@ -401,7 +410,7 @@ def get_homogeneity_report_elements(
 
     """
     # we assume that .tif images for homogeneity carry one single image
-    img = get_images_from_multi_tiff(path)[0]
+    img = get_images_from_multi_tiff(tiff_path)
 
     # 1. get normalized intensity profile
     norm_intensity_profile = get_norm_intensity_profile(img)
@@ -431,40 +440,23 @@ def get_homogeneity_report_elements(
         pd.DataFrame(profile_stat_table)
         ]
 
-    return homo_report_elements
+    if output_dir is not None:
+        # .png : Normalized Intensity Profile and Intesity Profile plot
+        norm_intensity_profile.savefig(
+            output_dir+"norm_intensity_profile.png",
+            format="png",
+            bbox_inches='tight'
+            )
+        intensity_plot.savefig(
+            output_dir+"intensity_plot.png", format="png", bbox_inches="tight"
+                            )
 
+        # .csv : Microscopy Info and profile_stat_table
+        norm_intensity_data.to_csv(output_dir+"norm_intensity_data.csv")
+        max_intensity_region_table.to_csv(output_dir+"max_region_table.csv")
+        microscopy_info_table.to_csv(output_dir+"microscopy_info_table.csv")
+        intensity_plot_data.to_csv(output_dir+"intensity_plot_data.csv")
+        profile_stat_table.to_csv(output_dir+"profile_stat_table.csv")
 
-def save_homogeneity_report_elements(
-        tiff_path, output_dir, microscope_type,
-        wavelength, NA, sampling_rate, pinhole
-        ):
-
-    homo_report_elements = get_homogeneity_report_elements(
-        tiff_path, microscope_type, wavelength, NA, sampling_rate, pinhole
-        )
-
-    norm_intensity_profile = homo_report_elements[0]
-    norm_intensity_data = homo_report_elements[1]
-    max_intensity_region_table = homo_report_elements[2]
-    microscopy_info_table = homo_report_elements[3]
-    intensity_plot = homo_report_elements[4]
-    intensity_plot_data = homo_report_elements[5]
-    profile_stat_table = homo_report_elements[6]
-
-    # .png : Normalized Intensity Profile and Intesity Profile plot
-    norm_intensity_profile.savefig(
-        output_dir+"norm_intensity_profile.png",
-        format="png",
-        bbox_inches='tight'
-        )
-    intensity_plot.savefig(
-        output_dir+"intensity_plot.png", format="png", bbox_inches="tight"
-                         )
-
-    # .csv : Microscopy Info and profile_stat_table
-    norm_intensity_data.to_csv(output_dir+"norm_intensity_data.csv")
-    max_intensity_region_table.to_csv(output_dir+"max_region_table.csv")
-    microscopy_info_table.to_csv(output_dir+"microscopy_info_table.csv")
-    intensity_plot_data.to_csv(output_dir+"intensity_plot_data.csv")
-    profile_stat_table.to_csv(output_dir+"profile_stat_table.csv")
-
+    else:
+        return homo_report_elements

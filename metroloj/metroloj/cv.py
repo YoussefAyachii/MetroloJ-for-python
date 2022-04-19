@@ -498,9 +498,13 @@ def get_hist_nbpixel_vs_grayintensity(tiff_data, output_path=None):
 
 
 def cv_report(
-        tiff_data,
-        microscope_type, wavelength, NA, sampling_rate, pinhole,
-        output_dir=None
+        tiff_path,
+        output_dir=None,
+        microscope_type="NA",
+        wavelength="NA",
+        NA="NA",
+        sampling_rate="NA",
+        pinhole="NA"
         ):
     """
     Generate the different componenent of the cv report and stock them in
@@ -510,18 +514,8 @@ def cv_report(
 
     Parameters
     ----------
-    tiff_data : list
-        list of images in a 2D np.arrays format.
-    microscope_type : str
-
-    wavelength : float
-        In nm.
-    NA : int or float
-        Numerical aperture.
-    sampling_rate : str
-        In number of pixels. Ex: "1.0x1.0x1.0".
-    pinhole : int or float
-        In airy units.
+    tiff_path : str
+        path of .tif image file
     output_dir : str, optional
         if specified, all elements will be saved in the mentioned dir:
         1.Save as .png: original images with ROIs marked on them.
@@ -531,6 +525,16 @@ def cv_report(
         4.Save as .csv: Dataframe enclosing info about the pixels with
         significant intensities of the segemented ROI of each
         given np.array.
+        wavelength : float
+        In nm.
+    microscope_type : str
+        Type of the microscope.
+    NA : int or float
+        Numerical aperture.
+    sampling_rate : str
+        In number of pixels. Ex: "1.0x1.0x1.0".
+    pinhole : int or float
+        In airy units.
 
     Returns
     -------
@@ -543,6 +547,9 @@ def cv_report(
             4. Dataframe enclosing info about the pixels with significant
             intensities of the segemented ROI of each given np.array.
     """
+
+    # convert tif img to numpy array
+    tiff_data, nb_img = cm.get_images_from_multi_tiff(tiff_path, nb_img=True)
 
     # Get Histogram : Nbpixel VS Gray scale
     hist_path = output_dir + "hist.png" if output_dir is not None else None
@@ -576,5 +583,5 @@ def cv_report(
                           hist_nbpixels_vs_grayscale,
                           cv_table]
 
-    return cv_report_elements
-
+    if output_dir is None:
+        return cv_report_elements
