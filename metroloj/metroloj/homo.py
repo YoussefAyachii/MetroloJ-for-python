@@ -362,7 +362,7 @@ def get_profile_statistics_table(img):
 # all report elements functions.
 
 
-def cv_report(
+def homo_report(
         tiff_path,
         output_dir=None,
         microscope_type="NA",
@@ -395,8 +395,8 @@ def cv_report(
 
     Returns
     -------
-    homo_report_elements : list
-        List of all the homogeneity report elements:
+    if output_dir is not specified: return list of all the homogeneity
+    report elements:
             1. normalized intensity profile of the image.
             2. np.array used to generate the normalized intensity profile.
             3. microscopy info dataframe
@@ -406,6 +406,7 @@ def cv_report(
             horizontal, mid vertical and the two diagonal lines of the image.
             6. dataframe showing the intensity values of 9 specific pixels and
             their ratio over the maximum intensity value of the array.
+    else, save files in specified dir.
 
 
     """
@@ -452,11 +453,11 @@ def cv_report(
                             )
 
         # .csv : Microscopy Info and profile_stat_table
-        norm_intensity_data.to_csv(output_dir+"norm_intensity_data.csv")
-        max_intensity_region_table.to_csv(output_dir+"max_region_table.csv")
+        pd.DataFrame(norm_intensity_data).to_csv(output_dir+"norm_intensity_data.csv")
+        pd.DataFrame(max_intensity_region_table).to_csv(output_dir+"max_region_table.csv")
         microscopy_info_table.to_csv(output_dir+"microscopy_info_table.csv")
-        intensity_plot_data.to_csv(output_dir+"intensity_plot_data.csv")
-        profile_stat_table.to_csv(output_dir+"profile_stat_table.csv")
+        pd.DataFrame(intensity_plot_data).to_csv(output_dir+"intensity_plot_data.csv")
+        pd.DataFrame(profile_stat_table).to_csv(output_dir+"profile_stat_table.csv")
 
     else:
         return homo_report_elements

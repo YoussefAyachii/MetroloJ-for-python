@@ -538,14 +538,14 @@ def cv_report(
 
     Returns
     -------
-    cv_report_elements : list
-        List of all the cv report elements:
+    if output_dir is not specified: return list of all the cv report:
             1. original images with ROIs marked on them.
             2. microscopy info dataframe
             3. histogram of the number of pixels per gray intensity value
             for all the images
             4. Dataframe enclosing info about the pixels with significant
             intensities of the segemented ROI of each given np.array.
+    else, save files in specified dir.
     """
 
     # convert tif img to numpy array

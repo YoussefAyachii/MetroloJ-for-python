@@ -1,4 +1,3 @@
-LICENSE
 README.md
 metroloj
 metroloj_script

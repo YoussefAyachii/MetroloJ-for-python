@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: metroloj
-Version: 0.1.2
+Version: 0.1.4
 Summary: A python implementation of ImageJ MetroloJ plugin
 Home-page: https://github.com/javatechy/dokr
 Author: Youssef Ayachi
@@ -11,7 +11,6 @@ Classifier: Programming Language :: Python :: 3
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
 Description-Content-Type: text/markdown
-License-File: LICENSE
 
 # MetroloJ-for-python
 MetroloJ is an ImageJ software plugin that helps keeping track of microscopes' performances by extracting 4 relevant estimators out of standardized images, acquired from test samples[1]. \

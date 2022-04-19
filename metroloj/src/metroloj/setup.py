@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 setuptools.setup(
      name='metroloj',  
      version='0.1.4',
-     scripts=['metroloj_script'] ,
+     scripts=['metroloj'] ,
      author="Youssef Ayachi",
      author_email="youssef-ayachi@outlook.com",
      description="A python implementation of ImageJ MetroloJ plugin",
