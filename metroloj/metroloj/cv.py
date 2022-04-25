@@ -224,11 +224,11 @@ def get_cv_table_global(tiff_data, output_dir=None):
 
     cv_normalized = np.divide(cv_list, min(cv_list))
 
-    cv_dict = {"sd": std_intensity_list,
-               "average": mean_intensity_list,
-               "nb_pixels": nb_pixels_list,
-               "cv": cv_list,
-               "cv_relative_to_min": cv_normalized
+    cv_dict = {"sd": np.around(np.array(std_intensity_list), 2),
+               "average": np.around(mean_intensity_list, 2),
+               "nb_pixels": np.around(nb_pixels_list, 2),
+               "cv": np.around(cv_list, 2),
+               "cv_relative_to_min": np.around(cv_normalized, 2)
                }
     if output_dir is not None:
         pd.DataFrame(cv_dict).to_csv(output_dir+"cv.csv")

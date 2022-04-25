@@ -331,8 +331,8 @@ def get_profile_statistics_table(img):
 
     xx, yy = np.meshgrid([0, img.shape[0] // 2, -1],
                          [0, img.shape[1] // 2, -1])
-    max_intensities = img[xx, yy].flatten()
-    max_intensities_relative = max_intensities/max_intensity
+    max_intensities = np.around(img[xx, yy].flatten(), 2)
+    max_intensities_relative = np.around(max_intensities/max_intensity, 2)
 
     # replace central pixel value with max intensity
     max_intensities[4] = max_intensity
