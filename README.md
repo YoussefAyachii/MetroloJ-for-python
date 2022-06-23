@@ -17,7 +17,7 @@ This way, metrologists can easily determine whether the microscope illumination 
 Detectors play an essential role in fluorescence microscopy as they are responsible for the quantification process of the fluorochromes' emitted light. Moreover, detectors participate in extending the microscopes' limits and their performance is crucial for acquiring high quality images. Hence, there is no doubt that detectors' limit, known as sensitivity, is one of most important features of any imaging system. Detectors' sensitivity is defined as the efficiency of the detector to detect light. Consequently, the higher is the detector sensitivity, the better is the quality of the acquired image.
 The sensitivity of a microscope detector is evaluated by computing the coefficient of variation (CV) indicator on an image of specific beads. 
 Moreover, only beads that are inside the central 20% of the image are considered when computing the CV indicator. Furthermore, only beads' pixels are then taken into account in computing the detector's CV value. In this context, the `cv.py` *metroloj* module enables to label specifically these beads' pixels (in red) on the studied microscope image.
-Basically, the CV indicator is defined as the ratio of the standard deviation ($\sigma$) over the average ($\mu$) of the bead's pixels intensity:
+Basically, the CV indicator is defined as the ratio of the standard deviation ( $\sigma$ ) over the average ( $\mu$ ) of the bead's pixels intensity:
 
 $$
 cv = \sigma/\mu
